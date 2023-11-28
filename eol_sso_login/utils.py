@@ -36,12 +36,11 @@ def check_rut_have_sso(rut):
         'AppKey': settings.SSOLOGIN_UCHILE_KEY,
         'Origin': settings.LMS_ROOT_URL
     }
-    params = (('indiv_id', rut),)
+    params = (('indiv_id', '"{}"'.format(rut)),)
     base_url = settings.SSOLOGIN_UCHILE_USER_INFO_URL
     result = requests.get(base_url, headers=headers, params=params)
 
     if result.status_code != 200:
-        print('r != 200')
         logger.error(
             "EOl_SSO_Login - Api Status Code Error, {} {}".format(
                 result.request,
@@ -50,10 +49,8 @@ def check_rut_have_sso(rut):
 
     data = json.loads(result.text)
     if data["data"]["getRowsPersona"] is None:
-        print('get row persona 0')
         return False
     if data['data']['getRowsPersona']['status_code'] != 200:
-        print('get row persoan code != 200')
         logger.error(
             "EOl_SSO_Login - Api Error: {}, body: {}, rut: {}".format(
                 data['data']['getRowsPersona']['status_code'],
@@ -61,9 +58,7 @@ def check_rut_have_sso(rut):
                 rut))
         return False
     if len(data["data"]["getRowsPersona"]["persona"]) == 0:
-        print('peronsa 0')
         return False
     if len(data["data"]["getRowsPersona"]["persona"][0]['pasaporte']) == 0:
-        print('pasaporte 0')
         return False
     return True
