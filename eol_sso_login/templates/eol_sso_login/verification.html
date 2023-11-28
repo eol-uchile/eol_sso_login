@@ -1,0 +1,175 @@
+## mako
+
+<%page expression_filter="h"/>
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="../main.html" />
+<%block name="pagetitle">
+%if context.get('action') == 'verification' or context.get('action') == 'pending' :
+    ${_("Verification")}
+%elif context.get('action') == 'data':
+    ${_("Additional Information")}
+%endif
+</%block>
+<style>
+    .alert{
+        max-width: none !important;
+    }
+    .alert-success{
+        color: #0f5132 !important;
+    }
+    .alert-danger{
+        color: #842029 !important;
+    }
+    .alert-warning{
+        color: #664d03 !important;
+    }
+    .ssoverification{
+        text-align: center;
+        width: 80%;
+        margin: auto;
+    }
+    .ssoverification-btn{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-shadow: none; 
+        border-color:white; 
+        background-color: #172c6b; 
+        background-image: none; 
+        display:block; 
+        margin: auto;
+        width: 357px;
+        height: 52px;
+        color: white !important;
+        margin-top: 30px;
+    }
+</style>
+<main id="main" aria-label="Content" tabindex="-1" class="static_pages" style="margin-top: 30px;">
+    % if context.get('action') == 'verification':
+        <h1>${_("Account Verification")}</h1>
+        <div class="ssoverification">
+            %if context.get('result') == 'success':
+                <div class="alert alert-success" role="alert">
+                    <b>${_("Successfully verified account")}</b>
+                </div>
+                <a class="ssoverification-btn" href="/login">${_("Sign in")}</a>
+            %else:
+                <div class="alert alert-danger" role="alert">
+                   <b>${_("An unexpected error has occurred, contact the help desk at the following ")} <a href="/contact_form">link</a>.</b>
+                </div>
+            %endif
+        </div>
+    %elif context.get('action') == 'pending':
+        <div class="ssoverification">
+            <div class="alert alert-warning" role="alert">
+                ${_("We send you a verification email to {mail} to connect your Mi.UChile account with your account found on the platform").format(mail=mail)}
+            </div>
+        </div>
+    %elif context.get('action') == 'data':
+    <style>
+        .account-settings-sections .section .account-settings-section-body .u-field{
+            display: flex;
+            justify-content: center;
+        }
+        .result-msg{
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+    <h1>${_("Additional Information")}</h1>
+    <div class="account-settings-sections">
+        <form method="POST">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}"/>
+            <div class="section">
+                <div class="result-msg">
+                    %if context.get('result', '') == 'success':
+                        <p style="color:rgb(56, 181, 197); margin-bottom: 15px;">${_("Correctly Updated Data")}.</p>
+                    %endif
+                    %if context.get('result', '') == 'error':
+                        <p style="color:firebrick; margin-bottom: 15px;">${_("Error updating the information, check the fields if they are correct or refresh the page and try again, if the error persists, contact the help desk")}.</p>
+                    %endif
+                </div>
+                <div class="account-settings-section-body aboutTabSections-section-body">
+                    <div class="u-field u-field-dropdown u-field-type_document editable-always mode-edit">
+                        <div class="u-field-value field">
+                            <label class="u-field-title field-label" for="u-field-select-type_document">
+                                ${_("Document type")}
+                            </label>
+                            <select name="type_document" id="u-field-select-type_document" aria-describedby="u-field-help-message-type_document">
+                                <option value="" disabled selected>${_("Select your option")}</option>
+                                %for k, v in sttgs_data['type_document']:
+                                    <option value="${k}" ${'selected' if user_data['type_document'] == k else ''} >${v}</option>
+                                %endfor
+                            </select>
+                            <span class="icon-caret-down" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="u-field u-field-text u-field-document editable-always mode-edit">
+                        <div class="u-field-value field">
+                            <label class="u-field-title field-label" for="field-input-document">${_("Document")}</label>
+                            <input class="field-input input-text" placeholder='${_("Document number")}' type="text" id="field-input-document" title='${_("Document number")}' aria-describedby="u-field-message-help-document" name="document" value='${user_data["document"]}'>
+                        </div>
+                    </div>
+                    <div class="u-field u-field-dropdown u-field-country editable-always mode-edit">
+                        <div class="u-field-value field">
+                            <label class="u-field-title field-label" for="u-field-select-country">
+                                ${_("Country or Region of Residence")}
+                            </label>
+                            <select name="country" id="u-field-select-country" aria-describedby="u-field-help-message-country">
+                                <option value="" disabled selected>${_("Select your option")}</option>
+                                %for k, v in sttgs_data['countries'].items():
+                                    <option value="${k}" ${'selected' if user_data['country'] == k else ''} >${v}</option>
+                                %endfor
+                            </select>
+                            <span class="icon-caret-down" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="u-field u-field-dropdown u-field-level_of_education editable-always mode-edit">
+                        <div class="u-field-value field">
+                            <label class="u-field-title field-label" for="u-field-select-level_of_education">
+                                ${_("Education Completed")}
+                            </label>
+                            <select name="level_of_education" id="u-field-select-level_of_education" aria-describedby="u-field-help-message-level_of_education">
+                                <option value="" disabled selected>${_("Select your option")}</option>
+                                %for k, v in sttgs_data['level_of_education']:
+                                    <option value="${k}" ${'selected' if user_data['level_of_education'] == k else ''}>${v}</option>
+                                %endfor
+                            </select>
+                            <span class="icon-caret-down" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="u-field u-field-dropdown u-field-gender editable-always mode-edit">
+                        <div class="u-field-value field">
+                            <label class="u-field-title field-label" for="u-field-select-gender">
+                                ${_("Gender")}
+                            </label>
+                            <select name="gender" id="u-field-select-gender" aria-describedby="u-field-help-message-gender">
+                                <option value="" disabled selected>${_("Select your option")}</option>
+                                %for k, v in sttgs_data['gender']:
+                                    <option value="${k}" ${'selected' if user_data['gender'] == k else ''}>${v}</option>
+                                %endfor
+                            </select>
+                            <span class="icon-caret-down" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="u-field u-field-dropdown u-field-year_of_birth editable-always mode-edit">
+                        <div class="u-field-value field">
+                            <label class="u-field-title field-label" for="u-field-select-year_of_birth">
+                                ${_("Year of birth")}
+                            </label>
+                            <select name="year_of_birth" id="u-field-select-year_of_birth" aria-describedby="u-field-help-message-year_of_birth">
+                                <option value="" disabled selected>${_("Select your option")}</option>
+                                %for y in sttgs_data['year']:
+                                    <option value="${y}" ${'selected' if user_data['year'] == y else ''}>${y}</option>
+                                %endfor
+                            </select>
+                            <span class="icon-caret-down" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                </div>
+                <input type="submit" style="text-shadow: none; border-color:white; background-color: #172c6b; background-image: none; display:block; margin: auto;width: 357px;height: 52px;" value='${_("Update")}'>
+            </div>
+        </form>
+    </div>
+    %endif
+</main>
