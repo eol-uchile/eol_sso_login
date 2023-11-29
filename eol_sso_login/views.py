@@ -100,7 +100,7 @@ class SSOUChile(object):
         getRowsPersona = data["data"]["getRowsPersona"]['persona'][0]
         user_data = {
             'rut': getRowsPersona['indiv_id'],
-            'username': username,
+            'username': data["data"]["getRowsPersona"]["persona"][0]['pasaporte'][0]['usuario'],
             'nombres': getRowsPersona['nombres'],
             'apellidoPaterno': getRowsPersona['paterno'],
             'apellidoMaterno': getRowsPersona['materno'],
@@ -554,8 +554,9 @@ class SSOLoginUChileCallback(View, SSOUChile):
         platform_name = configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)
         login_url = request.build_absolute_uri('/login')
         helpdesk_url = request.build_absolute_uri('/contact_form')
+        user_data = self.get_user_data(username)
         try:
-            ssologin_user = SSOLoginCuentaUChile.objects.get(username=username)
+            ssologin_user = SSOLoginCuentaUChile.objects.get(username=user_data['username'])
             if ssologin_user.is_active:
                 if request.user.is_anonymous or request.user.id != ssologin_user.user.id:
                     logout(request)
@@ -575,6 +576,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=ssologin_user.user)
                 except SSOLoginCuentaUChileRegistration.DoesNotExist:
                     ssologin_register = SSOLoginCuentaUChileRegistration.objects.create(
+                        username=user_data['username'],
                         user=ssologin_user.user,
                         activation_key=uuid.uuid4().hex
                     )
@@ -582,7 +584,6 @@ class SSOLoginUChileCallback(View, SSOUChile):
                 merge_verification_email.delay(ssologin_user.user.profile.name, ssologin_user.user.email, confirmation_url, login_url, helpdesk_url, platform_name)
                 return '{}?{}'.format( reverse('eol_sso_login:verification-pending'), urlencode({'mail':ssologin_user.user.email}))
         except SSOLoginCuentaUChile.DoesNotExist:
-            user_data = self.get_user_data(username)
             user, created = self.get_or_create_user(user_data)
             if user is None:
                 logger.error("SSOLoginUChileCallback - Error to get or create user, user_data: {}".format(user_data))
@@ -590,7 +591,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
             if created:
                 ssologin_user = SSOLoginCuentaUChile.objects.create(
                     user=user,
-                    username=username,
+                    username=user_data['username'],
                     is_active=True,
                     login_timestamp=datetime.utcnow()
                 )
@@ -607,6 +608,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
                 except SSOLoginCuentaUChileRegistration.DoesNotExist:
                     ssologin_register = SSOLoginCuentaUChileRegistration.objects.create(
+                        username=user_data['username'],
                         user=user,
                         activation_key=uuid.uuid4().hex
                     )
@@ -615,7 +617,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                 merge_verification_email.delay(fullname, user.email, confirmation_url, login_url, helpdesk_url, platform_name)
                 ssologin_user = SSOLoginCuentaUChile.objects.create(
                     user=user,
-                    username=username,
+                    username=user_data['username'],
                     is_active=False
                 )
                 return '{}?{}'.format(reverse('eol_sso_login:verification-pending'), urlencode({'mail':user.email}))

@@ -84,7 +84,17 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         get.side_effect = [namedtuple("Request",
                                       ["status_code",
                                        "content"])(200,
-                                                   ('yes\ntest.name\n').encode('utf-8')),]
+                                                   ('yes\ntest.name\n').encode('utf-8')),
+                            namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name'}],
+                                                     "nombres": "TEST NAME",
+                                                     'email': [{'email': 'test@test.test'}],
+                                                     "indiv_id": "0111111111"}]}}}))]
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
         result = self.client.get(
@@ -111,7 +121,17 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         get.side_effect = [namedtuple("Request",
                                       ["status_code",
                                        "content"])(200,
-                                                   ('yes\ntest.name\n').encode('utf-8')),]
+                                                   ('yes\ntest.name\n').encode('utf-8')),
+                            namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name'}],
+                                                     "nombres": "TEST NAME",
+                                                     'email': [{'email': 'test@test.test'}],
+                                                     "indiv_id": "0111111111"}]}}}))]
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
         result = self.client.get(
@@ -138,7 +158,17 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         get.side_effect = [namedtuple("Request",
                                       ["status_code",
                                        "content"])(200,
-                                                   ('yes\ntest.name\n').encode('utf-8')),]
+                                                   ('yes\ntest.name\n').encode('utf-8')),
+                            namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name'}],
+                                                     "nombres": "TEST NAME",
+                                                     'email': [{'email': 'test@test.test'}],
+                                                     "indiv_id": "0111111111"}]}}}))]
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
         self.assertEqual(SSOLoginCuentaUChileRegistration.objects.all().count(), 0)
