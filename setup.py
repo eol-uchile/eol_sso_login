@@ -23,7 +23,7 @@ setup(
     long_description="Authentication backend for EOL from UChile api and Enroll/Unenroll/Export users",
     url="https://eol.uchile.cl",
     packages=['eol_sso_login',],
-    package_data=package_data("eol_sso_login", ["static", "public", "locale"]),
+    package_data=package_data("eol_sso_login", ["static", "locale"]),
     install_requires=["unidecode>=1.1.1"],
     classifiers=[
         "Programming Language :: Python :: 2",

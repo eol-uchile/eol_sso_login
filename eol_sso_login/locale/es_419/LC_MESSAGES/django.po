@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: eol-ayuda@uchile.cl\n"
-"POT-Creation-Date: 2023-11-27 19:17+0000\n"
+"POT-Creation-Date: 2023-12-04 19:33+0000\n"
 "PO-Revision-Date: 2023-11-27 19:17+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es_419\n"
@@ -55,16 +55,17 @@ msgid "DNI"
 msgstr ""
 
 #: eol_sso_login/models.py:29
+#: eol_sso_login/templates/eol_sso_login/verification.html:113
 msgid "Document"
 msgstr "Documento"
 
 #: eol_sso_login/models.py:29
-#: eol_sso_login/templates/eol_sso_login/verification.html:110
+#: eol_sso_login/templates/eol_sso_login/verification.html:114
 msgid "Document number"
 msgstr "Número de documento"
 
 #: eol_sso_login/models.py:30
-#: eol_sso_login/templates/eol_sso_login/verification.html:96
+#: eol_sso_login/templates/eol_sso_login/verification.html:100
 msgid "Document type"
 msgstr "Tipo de documento"
 
@@ -77,77 +78,96 @@ msgid "Verification"
 msgstr "Verificación"
 
 #: eol_sso_login/templates/eol_sso_login/verification.html:10
-#: eol_sso_login/templates/eol_sso_login/verification.html:79
+#: eol_sso_login/templates/eol_sso_login/verification.html:83
 msgid "Additional Information"
 msgstr "Información Adicional"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:49
+#: eol_sso_login/templates/eol_sso_login/verification.html:53
 msgid "Account Verification"
 msgstr "Verificación de Cuenta"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:53
+#: eol_sso_login/templates/eol_sso_login/verification.html:57
 msgid "Successfully verified account"
 msgstr "Cuenta verificada correctamente"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:55
+#: eol_sso_login/templates/eol_sso_login/verification.html:59
 msgid "Sign in"
 msgstr "Iniciar sesión"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:58
+#: eol_sso_login/templates/eol_sso_login/verification.html:62
 msgid "An unexpected error has occurred, contact the help desk at the following "
-msgstr "Un error inesperado ha ocurrido, contáctese con mesa de ayuda en el siguiente "
-
-#: eol_sso_login/templates/eol_sso_login/verification.html:65
-msgid ""
-"We send you a verification email to {mail} to connect your Mi.UChile "
-"account with your account found on the platform"
 msgstr ""
-"Le envíamos un correo de Verificación a {mail} para vincular su cuenta "
-"Mi.UChile con su cuenta encontrada en plataforma"
+"Un error inesperado ha ocurrido, contáctese con mesa de ayuda en el "
+"siguiente "
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:86
+#: eol_sso_login/templates/eol_sso_login/verification.html:69
+msgid ""
+"We have sent you a verification email to {mail} to link your Mi.UChile "
+"account with the account found on the platform, which are associated with"
+" the same email address."
+msgstr ""
+"Le hemos enviado un correo de verificación a {mail} para vincular su cuenta de Mi.UChile "
+"con la cuenta encontrada en la plataforma, las cuales están asociadas a"
+" la misma dirección de correo electrónico."
+
+#: eol_sso_login/templates/eol_sso_login/verification.html:90
 msgid "Correctly Updated Data"
 msgstr "Datos actualizados correctamente"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:89
+#: eol_sso_login/templates/eol_sso_login/verification.html:93
 msgid ""
 "Error updating the information, check the fields if they are correct or "
 "refresh the page and try again, if the error persists, contact the help "
 "desk"
 msgstr ""
-"Error al actualizar la información, verifique que los campos si estan correctos o "
-"actualice la página e intente nuevamente, si el error persiste, contáctese con mesa "
-"de ayuda"
+"Error al actualizar la información, verifique que los campos si estan "
+"correctos o actualice la página e intente nuevamente, si el error "
+"persiste, contáctese con mesa de ayuda"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:99
-#: eol_sso_login/templates/eol_sso_login/verification.html:119
-#: eol_sso_login/templates/eol_sso_login/verification.html:133
-#: eol_sso_login/templates/eol_sso_login/verification.html:147
-#: eol_sso_login/templates/eol_sso_login/verification.html:161
+#: eol_sso_login/templates/eol_sso_login/verification.html:103
+#: eol_sso_login/templates/eol_sso_login/verification.html:123
+#: eol_sso_login/templates/eol_sso_login/verification.html:137
+#: eol_sso_login/templates/eol_sso_login/verification.html:151
+#: eol_sso_login/templates/eol_sso_login/verification.html:165
 msgid "Select your option"
 msgstr "Selecciona una opción"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:109
-msgid "Document"
-msgstr "Documento"
-
-#: eol_sso_login/templates/eol_sso_login/verification.html:116
+#: eol_sso_login/templates/eol_sso_login/verification.html:120
 msgid "Country or Region of Residence"
 msgstr "País o Region de Residencia"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:130
+#: eol_sso_login/templates/eol_sso_login/verification.html:134
 msgid "Education Completed"
 msgstr "Educación Completada"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:144
+#: eol_sso_login/templates/eol_sso_login/verification.html:148
 msgid "Gender"
 msgstr "Género"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:158
+#: eol_sso_login/templates/eol_sso_login/verification.html:162
 msgid "Year of birth"
 msgstr "Año de nacimiento"
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:170
+#: eol_sso_login/templates/eol_sso_login/verification.html:174
 msgid "Update"
 msgstr "Actualizar"
+
+#~ msgid ""
+#~ "We send you a verification email "
+#~ "to {mail} to connect your Mi.UChile "
+#~ "account with your account found on "
+#~ "the platform"
+#~ msgstr ""
+#~ "Le envíamos un correo de Verificación"
+#~ " a {mail} para vincular su cuenta "
+#~ "Mi.UChile con su cuenta encontrada en"
+#~ " plataforma"
+
+#~ msgid ""
+#~ "We have sent you a verification "
+#~ "email to {mail} to link your "
+#~ "Mi.UCile account with the account found"
+#~ " on the platform, which are "
+#~ "associated with the same email address."
+#~ msgstr ""
 

@@ -1,16 +1,31 @@
 ## mako
 <html>
-Estimada(o) ${fullname},<br><br>
-Como ingresa por primera vez con su cuenta UChile en la plataforma, le envíamos este correo para confirmar su identidad con su cuenta ${platform_name} con su cuenta UChile.<br>
-Para confirmar su identidad, presione el siguiente <b><a href="${confirmation_url}">link</a></b>, esta verificación solo es debe realizar la primera vez que inicia sesión con su cuenta UChile.<br>
-En caso contrario, si usted no inició sesión con su cuenta UChile en ${platform_name}, puede contactarse con nosotros a través de la <a href="${helpdesk_url}">Mesa de Ayuda</a>.<br><br>
-Si tiene problemas con su contraseña, debe dirigirse a <a href="https://cuenta.uchile.cl/solicitar-recuperar-cuenta">https://cuenta.uchile.cl/solicitar-recuperar-cuenta</a>, ingresar su RUT o número pasaporte extranjero, marcar la casilla "No soy un Robot" y luego presionar el botón “Siguiente” y se le enviará un correo con la información para recuperar su contraseña.<br><br>
-
-Si necesita ayuda o tiene alguna consulta, puede contactarse con nosotros a través de la <a href="${helpdesk_url}">Mesa de Ayuda</a>.<br><br>
-
-Gracias,<br> 
-Equipo ${platform_name}.<br><br>
-
-Este es un correo automático, por favor no responder.
-
+<p>
+    Estimada(o) ${fullname},
+</p>
+<br>
+<p>
+    Le hacemos envío de este correo porque hemos detectado que su dirección ${user_email} esta asociada al sistema de Cuenta UChile. Por ello, antes de finalizar su registro en la plataforma ${platform_name}, se requiere verificar la identidad de la cuenta UChile.
+</p>
+<br>
+<p>
+    Para confirmar su identidad, presione el siguiente <b><a href="${confirmation_url}">link</a></b>. Esta verificación solo se debe realizar la primera vez que inicia sesión con su cuenta UChile.
+</p>
+<br>
+<p>
+    Si tiene problemas con su contraseña, debe dirigirse a <a href="https://cuenta.uchile.cl/solicitar-recuperar-cuenta">https://cuenta.uchile.cl/solicitar-recuperar-cuenta</a>, ingresar su RUT o número pasaporte extranjero, marcar la casilla "No soy un Robot" y luego presionar el botón “Siguiente”. Se le enviará un correo electrónico con la información para recuperar su contraseña.
+</p>
+<br>
+<p>
+    En caso que usted no haya efectuado esta solicitud o necesite otro tipo de ayuda, puede contactarse con nosotros a través de la <a href="${helpdesk_url}">Mesa de Ayuda</a>.
+</p>
+<br>
+<p>
+    Gracias,<br> 
+    Equipo ${platform_name}.
+</p>
+<br>
+<p>        
+    Este es un correo automático, por favor no responder.
+</p>
 </html>
