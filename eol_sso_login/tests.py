@@ -546,47 +546,47 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         }
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_cc')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_cc_d')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_cc_dd')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_b_cc')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_bb_cc')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_b_cc_d')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_b_cc_dd')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_bb_cc_d')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_bb_cc_dd')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_cc1')
         data['email'] =  str(uuid.uuid4()) + '@invalid.invalid'
         self.assertEqual(
-            SSOUChile().create_user_by_data(dict(data), False).username,
+            SSOUChile().create_user_by_data(dict(data)).username,
             'aa_cc2')
 
     def test_long_name(self):
@@ -603,7 +603,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         }
 
         self.assertEqual(SSOUChile().create_user_by_data(
-            data, False).username, 'a2345678901234567890123_41')
+            data).username, 'a2345678901234567890123_41')
 
     def test_null_lastname(self):
         """
@@ -650,7 +650,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
             'email': 'test@test.test'
         }
         self.assertEqual(SSOUChile().create_user_by_data(
-            data, False).username, 'a234567890123456789012341')
+            data).username, 'a234567890123456789012341')
 
 class TestSSOLoginUChileVerificationPending(TestCase):
     def setUp(self):

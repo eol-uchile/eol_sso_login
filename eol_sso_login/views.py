@@ -136,7 +136,7 @@ class SSOUChile(object):
                         for email in diff:
                             if '@uchile.cl' in email:
                                 user_data['email'] = email
-                        user = self.create_user_by_data(user_data, False)
+                        user = self.create_user_by_data(user_data)
                         created = True
                     else:
                         return None, created
@@ -145,11 +145,11 @@ class SSOUChile(object):
                 for email in user_data['emails']:
                     if '@uchile.cl' in email:
                         user_data['email'] = email
-                user = self.create_user_by_data(user_data, False)
+                user = self.create_user_by_data(user_data)
                 created = True
         return user, created
 
-    def create_user_by_data(self, user_data, have_pass):
+    def create_user_by_data(self, user_data):
         """
         Create the user by the Django model
         """
@@ -158,7 +158,7 @@ class SSOUChile(object):
         username = self.generate_username(user_data)
         if 'nombreCompleto' not in user_data:
             user_data['nombreCompleto'] = '{} {} {}'.format(user_data['nombres'], user_data['apellidoPaterno'], user_data['apellidoMaterno'])
-        if have_pass:
+        if 'pass' in user_data:
             user_pass = user_data['pass']
         else:
             user_pass = BaseUserManager().make_random_password(12)
@@ -170,7 +170,7 @@ class SSOUChile(object):
                 "name": user_data['nombreCompleto'],
             },
             tos_required=False,
-            #ignore_email_blacklist=True # only eol-edx-platform have this params
+            #ignore_email_blacklist=True # only eol/edx-platform have this params
         )
         user, _, reg = do_create_account(form)
         reg.activate()
