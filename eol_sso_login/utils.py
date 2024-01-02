@@ -61,4 +61,6 @@ def check_rut_have_sso(rut):
         return False
     if len(data["data"]["getRowsPersona"]["persona"][0]['pasaporte']) == 0:
         return False
+    if data["data"]["getRowsPersona"]["persona"][0]['pasaporte'][0]['vigencia'] != '1':
+        return False
     return True

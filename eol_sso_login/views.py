@@ -90,12 +90,21 @@ class SSOUChile(object):
                     result.status_code, username))
         if len(data["data"]["getRowsPersona"]["persona"][0]['pasaporte']) == 0:
             logger.error(
-                "SSOUChile - Doesnt exists rut in PH API, status_code: {}, body: {}, rut: {}".format(
+                "SSOUChile - Rut doesnt have account in PH API, status_code: {}, body: {}, rut: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
                     rut))
             raise Exception(
-                "SSOUChile - Doesnt exists rut in PH API, status_code: {}, rut: {}".format(
+                "SSOUChile - Rut doesnt have account in PH API, status_code: {}, rut: {}".format(
+                    result.status_code, rut))
+        if data["data"]["getRowsPersona"]["persona"][0]['pasaporte'][0]['vigencia'] != '1':
+            logger.error(
+                "SSOUChile - Disabled account in PH API, status_code: {}, body: {}, rut: {}".format(
+                    data['data']['getRowsPersona']['status_code'],
+                    result.text,
+                    rut))
+            raise Exception(
+                "SSOUChile - Disabled account in PH API, status_code: {}, rut: {}".format(
                     result.status_code, rut))
         getRowsPersona = data["data"]["getRowsPersona"]['persona'][0]
         user_data = {

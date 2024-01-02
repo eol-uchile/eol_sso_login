@@ -35,6 +35,8 @@ class ExtraInfoForm(forms.ModelForm):
             raise forms.ValidationError(_('Incorrect Rut'))
 
         if type_document == 'rut':
+            document = document.replace("-", "")
+            document = document.replace(".", "")
             while len(document) < 10:
                 document = "0" + document
         if SSOLoginExtraData.objects.filter(document=document, type_document=type_document).exists():

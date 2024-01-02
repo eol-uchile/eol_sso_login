@@ -35,6 +35,8 @@ def registration_validation(request):
         return JsonResponse({'result': 'error', 'error':'wrong_rut'})
 
     if type_document == 'rut':
+        document = document.replace("-", "")
+        document = document.replace(".", "")
         while len(document) < 10:
             document = "0" + document
 
