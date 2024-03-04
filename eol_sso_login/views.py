@@ -97,6 +97,24 @@ class SSOUChile(object):
             raise Exception(
                 "SSOUChile - Rut doesnt have account in PH API, status_code: {}, rut: {}".format(
                     result.status_code, rut))
+        if 'email' not in data["data"]["getRowsPersona"]["persona"][0]:
+            logger.error(
+                "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, body: {}, rut: {}".format(
+                    data['data']['getRowsPersona']['status_code'],
+                    result.text,
+                    rut))
+            raise Exception(
+                "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, rut: {}".format(
+                    result.status_code, rut))
+        elif len(data["data"]["getRowsPersona"]["persona"][0]['email']) == 0:
+            logger.error(
+                "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, body: {}, rut: {}".format(
+                    data['data']['getRowsPersona']['status_code'],
+                    result.text,
+                    rut))
+            raise Exception(
+                "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, rut: {}".format(
+                    result.status_code, rut))
         if data["data"]["getRowsPersona"]["persona"][0]['pasaporte'][0]['vigencia'] != '1':
             logger.error(
                 "SSOUChile - Disabled account in PH API, status_code: {}, body: {}, rut: {}".format(

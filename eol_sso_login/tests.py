@@ -481,6 +481,65 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
 
     @patch('requests.get')
+    def test_login_error_to_get_data_6(self, get):
+        """
+            Test create user when fail to get data from ph api
+        """
+        get.side_effect = [namedtuple("Request",
+                                      ["status_code",
+                                       "content"])(200,
+                                                   ('yes\ntest.name\n').encode('utf-8')),
+                           namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code': 200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
+                                                     "nombres": "TEST NAME",
+                                                     'email': [],
+                                                     "indiv_id": "0112223334"}]}}}))]
+
+
+        result = self.client.get(
+            reverse('eol_sso_login:uchile_callback'),
+            data={'ticket': 'testticket'})
+        self.assertFalse(SSOLoginCuentaUChile.objects.filter(username="test.name").exists())
+        request = urllib.parse.urlparse(result.url)
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+
+    @patch('requests.get')
+    def test_login_error_to_get_data_7(self, get):
+        """
+            Test create user when fail to get data from ph api
+        """
+        get.side_effect = [namedtuple("Request",
+                                      ["status_code",
+                                       "content"])(200,
+                                                   ('yes\ntest.name\n').encode('utf-8')),
+                           namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code': 200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
+                                                     "nombres": "TEST NAME",
+                                                     "indiv_id": "0112223334"}]}}}))]
+
+
+        result = self.client.get(
+            reverse('eol_sso_login:uchile_callback'),
+            data={'ticket': 'testticket'})
+        self.assertFalse(SSOLoginCuentaUChile.objects.filter(username="test.name").exists())
+        request = urllib.parse.urlparse(result.url)
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+
+
+
+    @patch('requests.get')
     def test_login_create_user_wrong_email(self, get):
         """
             Test create user when email is wrong
@@ -1033,7 +1092,7 @@ class TestSSOLoginAPI(TestCase):
             'have_sso': True
             }
         self.assertEqual(respose, expected)
-    
+
     @patch('requests.get')
     def test_registration_validation_no_have_sso(self, get):
         """
@@ -1077,6 +1136,63 @@ class TestSSOLoginAPI(TestCase):
                                                      'pasaporte': [{'usuario':'test.name', 'vigencia': '0'}],
                                                      "nombres": "TEST NAME",
                                                      'email': [{'email': 'test@test.test'}],
+                                                     "indiv_id": "0111111111"}]}}}))]
+        
+        post_data = {
+            'document': '11111111-1',
+            'type_document': 'rut'
+        }
+        result = self.client.post(reverse('eol_sso_login:api-registration'), post_data)
+        self.assertEqual(result.status_code, 200)
+        respose = json.loads(result._container[0].decode())
+        expected = {
+            'result': 'success', 
+            'have_sso': False
+            }
+        self.assertEqual(respose, expected)
+
+    @patch('requests.get')
+    def test_registration_validation_no_have_sso_3(self, get):
+        """
+            test post method normal process havent ssologin
+        """
+        get.side_effect = [namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code': 200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
+                                                     "nombres": "TEST NAME",
+                                                     'email': [],
+                                                     "indiv_id": "0111111111"}]}}}))]
+        
+        post_data = {
+            'document': '11111111-1',
+            'type_document': 'rut'
+        }
+        result = self.client.post(reverse('eol_sso_login:api-registration'), post_data)
+        self.assertEqual(result.status_code, 200)
+        respose = json.loads(result._container[0].decode())
+        expected = {
+            'result': 'success', 
+            'have_sso': False
+            }
+        self.assertEqual(respose, expected)
+
+    @patch('requests.get')
+    def test_registration_validation_no_have_sso_4(self, get):
+        """
+            test post method normal process havent ssologin
+        """
+        get.side_effect = [namedtuple("Request",
+                                      ["status_code",
+                                       "text"])(200,
+                                                json.dumps({'data':{'getRowsPersona':{'status_code': 200,'persona':[
+                                                    {"paterno": "TESTLASTNAME",
+                                                     "materno": "TESTLASTNAME",
+                                                     'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
+                                                     "nombres": "TEST NAME",
                                                      "indiv_id": "0111111111"}]}}}))]
         
         post_data = {
