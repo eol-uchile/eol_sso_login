@@ -24,6 +24,7 @@ from django.utils.translation import ugettext as _
 from django.views.generic.base import View
 from django.http import HttpResponse
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+from openedx.core.djangoapps.user_authn.cookies import set_logged_in_cookies
 from urllib.parse import urlencode
 
 from .models import SSOLoginCuentaUChile, SSOLoginExtraData, SSOLoginCuentaUChileRegistration
@@ -536,13 +537,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                 '{}?next={}'.format(
                     error_url, redirect_url))
         try:
-            is_logged = self.create_login_user(request, username)
-            if is_logged is False:
-                return HttpResponseRedirect('{}?next={}'.format(error_url, redirect_url))
-            elif is_logged is True:
-                return HttpResponseRedirect(redirect_url)
-            else:
-                return HttpResponseRedirect(is_logged)
+            return self.create_login_user(request, username, error_url, redirect_url)
         except Exception as e:
             logger.exception("SSOLoginUChileCallback - Error logging {} - {}, error: {}".format(username, ticket, str(e)))
             return HttpResponseRedirect(
@@ -574,7 +569,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
 
         return None
 
-    def create_login_user(self, request, username):
+    def create_login_user(self, request, username, error_url, redirect_url):
         """
         Get or create the user and log him in.
         """
@@ -595,9 +590,11 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     ssologin_user.login_timestamp = datetime.utcnow()
                     ssologin_user.save()
                 if SSOLoginExtraData.objects.filter(user=ssologin_user.user).exists():
-                    return True
+                    response = HttpResponseRedirect(redirect_url)
                 else:
-                    return reverse('eol_sso_login:verification-data')
+                    response = HttpResponseRedirect(reverse('eol_sso_login:verification-data'))
+                response = set_logged_in_cookies(request, response, ssologin_user.user)
+                return response
             else:
                 try:
                     ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=ssologin_user.user)
@@ -609,12 +606,13 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     )
                 confirmation_url = request.build_absolute_uri('{}?{}'.format(reverse('eol_sso_login:verification'), urlencode({'id':ssologin_register.activation_key})))
                 merge_verification_email.delay(ssologin_user.user.profile.name, ssologin_user.user.email, confirmation_url, login_url, helpdesk_url, platform_name)
-                return '{}?{}'.format( reverse('eol_sso_login:verification-pending'), urlencode({'mail':ssologin_user.user.email}))
+                aux_url = '{}?{}'.format( reverse('eol_sso_login:verification-pending'), urlencode({'mail':ssologin_user.user.email}))
+                return HttpResponseRedirect(aux_url)
         except SSOLoginCuentaUChile.DoesNotExist:
             user, created = self.get_or_create_user(user_data)
             if user is None:
                 logger.error("SSOLoginUChileCallback - Error to get or create user, user_data: {}".format(user_data))
-                return False
+                return HttpResponseRedirect('{}?next={}'.format(error_url, redirect_url))
             if created:
                 ssologin_user = SSOLoginCuentaUChile.objects.create(
                     user=user,
@@ -622,6 +620,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     is_active=True,
                     login_timestamp=datetime.utcnow()
                 )
+                response = HttpResponseRedirect(reverse('eol_sso_login:verification-data'))
                 if request.user.is_anonymous or request.user.id != ssologin_user.user.id:
                     logout(request)
                     login(
@@ -629,7 +628,8 @@ class SSOLoginUChileCallback(View, SSOUChile):
                         ssologin_user.user,
                         backend="django.contrib.auth.backends.AllowAllUsersModelBackend",
                     )
-                return reverse('eol_sso_login:verification-data')
+                    response = set_logged_in_cookies(request, response, user)
+                return response
             else:
                 try:
                     ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
@@ -647,5 +647,6 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     username=user_data['username'],
                     is_active=False
                 )
-                return '{}?{}'.format(reverse('eol_sso_login:verification-pending'), urlencode({'mail':user.email}))
+                aux_url = '{}?{}'.format(reverse('eol_sso_login:verification-pending'), urlencode({'mail':user.email}))
+                return HttpResponseRedirect(aux_url)
 
