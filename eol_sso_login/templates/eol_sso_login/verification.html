@@ -136,7 +136,7 @@
                             <select name="level_of_education" id="u-field-select-level_of_education" aria-describedby="u-field-help-message-level_of_education">
                                 <option value="" disabled selected>${_("Select your option")}</option>
                                 %for k, v in sttgs_data['level_of_education']:
-                                    <option value="${k}" ${'selected' if user_data['level_of_education'] == k else ''}>${v}</option>
+                                    <option value="${k}" ${'selected' if user_data['level_of_education'] == k else ''}>${_(v)}</option>
                                 %endfor
                             </select>
                             <span class="icon-caret-down" aria-hidden="true"></span>
@@ -150,7 +150,7 @@
                             <select name="gender" id="u-field-select-gender" aria-describedby="u-field-help-message-gender">
                                 <option value="" disabled selected>${_("Select your option")}</option>
                                 %for k, v in sttgs_data['gender']:
-                                    <option value="${k}" ${'selected' if user_data['gender'] == k else ''}>${v}</option>
+                                    <option value="${k}" ${'selected' if user_data['gender'] == k else ''}>${_(v)}</option>
                                 %endfor
                             </select>
                             <span class="icon-caret-down" aria-hidden="true"></span>

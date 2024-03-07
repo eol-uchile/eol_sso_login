@@ -61,7 +61,7 @@ class SSOUChile(object):
                 "SSOUChile - Doesnt exists username in PH API, status_code: {}, username: {}".format(
                     result.status_code, username))
 
-        data = json.loads(result.text)
+        data = result.json()
         if data["data"]["getRowsPersona"] is None:
             logger.error(
                 "SSOUChile - Doesnt exists rut in PH API, status_code: {}, body: {}, username: {}".format(
@@ -403,6 +403,8 @@ class SSOLoginUChileVerificationData(View):
         user.profile.save()
         document = data['document'].upper().strip()
         if data['type_document'] == 'rut':
+            document = document.replace("-", "")
+            document = document.replace(".", "")
             while len(document) < 10:
                 document = "0" + document
         try:

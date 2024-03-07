@@ -87,14 +87,14 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
                                                    ('yes\ntest.name\n').encode('utf-8')),
                             namedtuple("Request",
                                       ["status_code",
-                                       "text"])(200,
-                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                       "json"])(200,
+                                                lambda:{'data':{'getRowsPersona':{'status_code':200,'persona':[
                                                     {"paterno": "TESTLASTNAME",
                                                      "materno": "TESTLASTNAME",
                                                      'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
                                                      "nombres": "TEST NAME",
                                                      'email': [{'email': 'test@test.test'}],
-                                                     "indiv_id": "0111111111"}]}}}))]
+                                                     "indiv_id": "0111111111"}]}}})]
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
         result = self.client.get(
@@ -124,14 +124,14 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
                                                    ('yes\ntest.name\n').encode('utf-8')),
                             namedtuple("Request",
                                       ["status_code",
-                                       "text"])(200,
-                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                       "json"])(200,
+                                                lambda:{'data':{'getRowsPersona':{'status_code':200,'persona':[
                                                     {"paterno": "TESTLASTNAME",
                                                      "materno": "TESTLASTNAME",
                                                      'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
                                                      "nombres": "TEST NAME",
                                                      'email': [{'email': 'test@test.test'}],
-                                                     "indiv_id": "0111111111"}]}}}))]
+                                                     "indiv_id": "0111111111"}]}}})]
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
         result = self.client.get(
@@ -161,14 +161,14 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
                                                    ('yes\ntest.name\n').encode('utf-8')),
                             namedtuple("Request",
                                       ["status_code",
-                                       "text"])(200,
-                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                       "json"])(200,
+                                                lambda:{'data':{'getRowsPersona':{'status_code':200,'persona':[
                                                     {"paterno": "TESTLASTNAME",
                                                      "materno": "TESTLASTNAME",
                                                      'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
                                                      "nombres": "TEST NAME",
                                                      'email': [{'email': 'test@test.test'}],
-                                                     "indiv_id": "0111111111"}]}}}))]
+                                                     "indiv_id": "0111111111"}]}}})]
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
         self.assertEqual(SSOLoginCuentaUChileRegistration.objects.all().count(), 0)
@@ -203,14 +203,14 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
                                                    ('yes\ntest.name\n').encode('utf-8')),
                            namedtuple("Request",
                                       ["status_code",
-                                       "text"])(200,
-                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                       "json"])(200,
+                                                lambda:{'data':{'getRowsPersona':{'status_code':200,'persona':[
                                                     {"paterno": "TESTLASTNAME",
                                                      "materno": "TESTLASTNAME",
                                                      'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
                                                      "nombres": "TEST NAME",
                                                      'email': [{'email': 'test@test.test'}],
-                                                     "indiv_id": "0111111111"}]}}}))]
+                                                     "indiv_id": "0111111111"}]}}})]
 
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 0)
         self.assertFalse(User.objects.filter(email="test@test.test").exists())
@@ -238,14 +238,14 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
                                                    ('yes\ntest.name\n').encode('utf-8')),
                            namedtuple("Request",
                                       ["status_code",
-                                       "text"])(200,
-                                                json.dumps({'data':{'getRowsPersona':{'status_code':200,'persona':[
+                                       "json"])(200,
+                                                lambda:{'data':{'getRowsPersona':{'status_code':200,'persona':[
                                                     {"paterno": "TESTLASTNAME",
                                                      "materno": "TESTLASTNAME",
                                                      'pasaporte': [{'usuario':'test.name', 'vigencia': '1'}],
                                                      "nombres": "TEST NAME",
                                                      'email': [{'email': self.user.email}],
-                                                     "indiv_id": "0111111111"}]}}}))]
+                                                     "indiv_id": "0111111111"}]}}})]
 
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 0)
         self.assertEqual(SSOLoginCuentaUChileRegistration.objects.all().count(), 0)
