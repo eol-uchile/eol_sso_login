@@ -1,5 +1,7 @@
 #!/bin/dash
 
+set -e
+
 pip install -e /openedx/requirements/eol_sso_login
 
 cd /openedx/requirements/eol_sso_login
