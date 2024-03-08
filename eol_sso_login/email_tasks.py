@@ -27,7 +27,7 @@ def enroll_email(data, courses_name, login_url, helpdesk_url):
     """
     platform_name = configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)
     subject = 'Inscripción en el curso: {}'.format(courses_name)
-    user = User.objects.get(data['user_id'])
+    user = User.objects.get(id=int(data['user_id']))
     created = data['created']
     have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
     active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
