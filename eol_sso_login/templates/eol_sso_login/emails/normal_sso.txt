@@ -1,0 +1,42 @@
+## mako
+<html>
+Estimada(o) ${user_name},<br><br>
+Usted ha sido inscrito en el curso: "${courses_name}".<br>
+Para ingresar, debe dirigirse a <a href="${login_url}">${login_url}</a>. Introduzca el correo electrónico vinculado a su cuenta en el campo correspondiente y haga clic en el botón "Siguiente". Luego, ingrese su contraseña y haga click en el botón "Iniciar sesión". Los datos de su cuenta son los siguientes:<br><br>
+
+Correo: ${user_email}<br><br>
+
+Si tiene problemas con su contraseña, debe dirigirse a <a href="${login_url}">${login_url}</a>. Introduzca el correo electrónico vinculado a su cuenta y haga click en el botón "Siguiente". Luego, debe hacer click en el enlace "¿Necesita ayuda para iniciar sesión?" debajo del campo de contraseña y seleccionar la opción "Olvidé mi contraseña". Aquí debe ingresar su correo "${user_email}", y se le enviará un correo con la información para recuperar su contraseña.<br><br>
+
+Si desea vincular esta cuenta con su cuenta Mi.UChile, haga click en el siguiente enlace: <br><br>
+
+${confirmation_url}<br><br>
+
+Si necesita ayuda o tiene alguna consulta, puede contactarse con nosotros a través de la <a href="${helpdesk_url}">Mesa de Ayuda</a>.<br><br>
+
+Gracias,<br>
+Equipo ${platform_name}.<br><br>
+
+Este es un correo automático, por favor no responder.
+<br><br>
+-------------
+<br><br>
+Dear ${user_name},<br><br>
+You have been enrolled in the course: "${courses_name}".<br>
+To enter, please go to <a href="${login_url}">${login_url}</a>. Enter the email address linked to your account in the appropriate field and click on the "Next" button. Then, enter your password and click on the "Sign in" button. The details of your account are as follows:. Your account information is as follows:<br><br>
+
+User Email: ${user_email}<br><br>
+
+If you have problems loggin in, you can go to <a href="${login_url}">${login_url}</a>. Enter the email address linked to your account and click on the "Next" button. Then, you should click on the "Need help signing in?" link below the password field and select the "Forgot my password" option. There you should enter your email address "${user_email}", and an email will be sent to you with the information to recover your password.<br><br>
+
+If you wish to link this account with your Mi.UChile account, please go to:<br><br>
+
+${confirmation_url}<br><br>
+
+If you need any help, please contact us at <a href="${helpdesk_url}">Help Desk</a>.<br><br>
+
+Thanks,<br>
+Team ${platform_name}.<br><br>
+
+This is an automatic email, please do not reply. 
+</html>

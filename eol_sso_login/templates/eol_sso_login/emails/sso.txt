@@ -1,0 +1,30 @@
+## mako
+<html>
+Estimada(o) ${user_name},<br><br>
+Usted ha sido inscrito en el curso: "${courses_name}".<br>
+Para ingresar, debe dirigirse a <a href="${login_url}">${login_url}</a>. Introduzca el correo electrónico vinculado a su cuenta de mi.uchile en el campo correspondiente y haga clic en el botón "Siguiente". Si su cuenta es reconocida correctamente, verá un botón etiquetado como "Iniciar Sesión con Mi.UChile". Haga clic en este botón para continuar.<br><br>
+
+Si tiene problemas con su contraseña, debe dirigirse a <a href="https://cuenta.uchile.cl/solicitar-recuperar-cuenta">https://cuenta.uchile.cl/solicitar-recuperar-cuenta</a>, ingresar su RUT o número pasaporte extranjero, marcar la casilla "No soy un Robot" y luego presionar el botón “Siguiente” y se le enviará un correo con la información para recuperar su contraseña.<br><br>
+
+Si necesita ayuda o tiene alguna consulta, puede contactarse con nosotros a través de la <a href="${helpdesk_url}">Mesa de Ayuda</a>.<br><br>
+
+Gracias,<br> 
+Equipo ${platform_name}.<br><br>
+
+Este es un correo automático, por favor no responder.
+<br><br>
+-------------
+<br><br>
+Dear ${user_name},<br><br>
+You have been enrolled in the course: "${courses_name}".<br>
+To enter, please go to <a href="${login_url}">${login_url}</a>. Enter the email address linked to your Mi.UChile account in the appropriate field and click on the "Next" button. If your account is correctly recognized, you will see a button labeled "Sign In with Mi.UChile". Click on this button to continue.<br><br>  
+
+If you have problems with your password, please go to <a href="https://cuenta.uchile.cl/solicitar-recuperar-cuenta">https://cuenta.uchile.cl/solicitar-recuperar-cuenta</a>, enter your RUT or Passport number, and an email will be sent to you with the information to recover your password.<br><br>  
+
+If you have any questions, please contact us at <a href="${helpdesk_url}">Help Desk</a>.<br><br>
+
+Thanks,<br>
+Team ${platform_name} .<br><br>
+
+This is an automatic email, please do not reply.
+</html>

@@ -5,7 +5,7 @@
 </p>
 <br>
 <p>
-    Hemos detectado que su dirección ${user_email} esta asociada al sistema de Cuenta UChile. Por ello, antes de finalizar su registro en la plataforma ${platform_name}, se requiere verificar la identidad de la cuenta UChile.
+    Hemos detectado que su dirección ${user_email} está asociada al sistema de Cuenta UChile. Por ello, antes de finalizar su registro en la plataforma ${platform_name}, se requiere verificar la identidad de la cuenta UChile.
 </p>
 <br>
 <p>

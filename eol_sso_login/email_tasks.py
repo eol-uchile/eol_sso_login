@@ -5,9 +5,12 @@ from django.conf import settings
 from celery import task
 from django.core.mail import send_mail
 from django.utils.html import strip_tags
-
+from django.contrib.auth.models import User
+from urllib.parse import urlencode
+from django.urls import reverse
+import unidecode
 from django.template.loader import render_to_string
-
+from .models import SSOLoginCuentaUChile, SSOLoginExtraData, SSOLoginCuentaUChileRegistration
 import logging
 logger = logging.getLogger(__name__)
 
@@ -22,27 +25,48 @@ def enroll_email(user_pass, user_email, courses_name, is_sso, exists, login_url,
     """
         Send mail to specific user
     """
-    platform_name = configuration_helpers.get_value(
-            'PLATFORM_NAME', settings.PLATFORM_NAME)
-    subject = 'Inscripción en el(los) curso(s): {}'.format(courses_name)
+    platform_name = configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)
+    subject = 'Inscripción en el curso: {}'.format(courses_name)
+    user = User.objects.get(data['user_id'])
+    created = data['created']
+    have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
+    active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
+    diff_email = user.email != data['email']
+    if not active_sso:
+        try
+            ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
+            confirmation_url = 'https://open.uchile.cl{}?{}'.format(reverse('eol_sso_login:verification'), urlencode({'id':ssologin_register.activation_key}))
+        except Exception:
+            ssologin_register = None
+            confirmation_url = "https://open.uchile.cl/"
     context = {
         "courses_name": courses_name,
         "platform_name": platform_name,
-        "user_password": user_pass,
-        'user_email': user_email,
+        "user_password": data['password'],
+        'user_email': user.email,
         'login_url': login_url,
-        'user_name': user_name,
-        'helpdesk_url': helpdesk_url
+        'user_name': user.profile.name.strip(),
+        'helpdesk_url': helpdesk_url,
+        'confirmation_url': confirmation_url
     }
-    emails = [user_email]
-    if original_email != '':
-        emails.append(original_email)
-    if is_sso:
-        html_message = render_to_string('eol_sso_login/emails/sso_email.txt', context)
-    elif exists:
-        html_message = render_to_string('eol_sso_login/emails/exists_user_email.txt', context)
+    emails = [user.email]
+    if diff_email:
+        emails.append(data['email'])
+
+    if created:
+        if have_sso and active_sso:
+            html_message = render_to_string('eol_sso_login/emails/sso.txt', context)
+        elif not have_sso:
+            html_message = render_to_string('eol_sso_login/emails/normal_pass.txt', context)
+        elif have_sso and not active_sso:
+            html_message = render_to_string('eol_sso_login/emails/normal_pass.txt', context)
     else:
-        html_message = render_to_string('eol_sso_login/emails/normal_email.txt', context)
+        if have_sso and active_sso:
+            html_message = render_to_string('eol_sso_login/emails/sso.txt', context)
+        elif have_sso and not active_sso:
+            html_message = render_to_string('eol_sso_login/emails/normal_sso.txt', context)
+        elif not have_sso:
+            html_message = render_to_string('eol_sso_login/emails/normal.txt', context)
     plain_message = strip_tags(html_message)
     from_email = configuration_helpers.get_value(
         'email_from_address',
