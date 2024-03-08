@@ -32,13 +32,14 @@ def enroll_email(data, courses_name, login_url, helpdesk_url):
     have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
     active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
     diff_email = user.email != data['email']
+    ssologin_register = None
+    confirmation_url = "https://open.uchile.cl/"
     if not active_sso:
         try:
             ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
             confirmation_url = 'https://open.uchile.cl{}?{}'.format(reverse('eol_sso_login:verification'), urlencode({'id':ssologin_register.activation_key}))
         except Exception:
-            ssologin_register = None
-            confirmation_url = "https://open.uchile.cl/"
+            pass
     context = {
         "courses_name": courses_name,
         "platform_name": platform_name,
