@@ -21,7 +21,7 @@ EMAIL_MAX_RETRIES = 5
     queue='edx.lms.core.low',
     default_retry_delay=EMAIL_DEFAULT_RETRY_DELAY,
     max_retries=EMAIL_MAX_RETRIES)
-def enroll_email(user_pass, user_email, courses_name, is_sso, exists, login_url, user_name, helpdesk_url, original_email):
+def enroll_email(data, courses_name, login_url, helpdesk_url):
     """
         Send mail to specific user
     """
