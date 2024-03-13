@@ -23,12 +23,16 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 from django.views.generic.base import View
 from django.http import HttpResponse
+from lms.djangoapps.courseware.access import has_access
+from lms.djangoapps.courseware.courses import get_course_by_id, get_course_with_access
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.user_authn.cookies import set_logged_in_cookies
+from opaque_keys.edx.keys import CourseKey
+from opaque_keys import InvalidKeyError
 from urllib.parse import urlencode
 
 from .models import SSOLoginCuentaUChile, SSOLoginExtraData, SSOLoginCuentaUChileRegistration
-from .email_tasks import merge_verification_email
+from .email_tasks import merge_verification_email, enroll_email
 from .utils import validarRut
 
 
@@ -39,7 +43,7 @@ USERNAME_MAX_LENGTH = 30
 
 
 class SSOUChile(object):
-    def get_user_data(self, username):
+    def get_user_data(self, dato, is_rut=False):
         """
         Get the user data
         """
@@ -47,48 +51,51 @@ class SSOUChile(object):
             'AppKey': settings.SSOLOGIN_UCHILE_KEY,
             'Origin': settings.LMS_ROOT_URL
         }
-        params = (('usuario', '"{}"'.format(username)),)
+        if is_rut:
+            params = (('indiv_id', '"{}"'.format(dato)),)
+        else:
+            params = (('usuario', '"{}"'.format(dato)),)
         base_url = settings.SSOLOGIN_UCHILE_USER_INFO_URL
         result = requests.get(base_url, headers=headers, params=params)
 
         if result.status_code != 200:
             logger.error(
-                "SSOUChile - Api Error: {}, body: {}, username: {}".format(
+                "SSOUChile - Api Error: {}, body: {}, dato: {}".format(
                     result.status_code,
                     result.text,
-                    username))
+                    dato))
             raise Exception(
-                "SSOUChile - Doesnt exists username in PH API, status_code: {}, username: {}".format(
-                    result.status_code, username))
+                "SSOUChile - Doesnt exists username/rut in PH API, status_code: {}, dato: {}".format(
+                    result.status_code, dato))
 
         data = result.json()
         if data["data"]["getRowsPersona"] is None:
             logger.error(
-                "SSOUChile - Doesnt exists rut in PH API, status_code: {}, body: {}, username: {}".format(
+                "SSOUChile - Doesnt exists username/rut in PH API, status_code: {}, body: {}, dato: {}".format(
                     result.status_code,
                     result.text,
-                    username))
+                    dato))
             raise Exception(
-                "SSOUChile - Doesnt exists username in PH API, status_code: {}, username: {}".format(
-                    result.status_code, username))
+                "SSOUChile - Doesnt exists username/rut in PH API, status_code: {}, dato: {}".format(
+                    result.status_code, dato))
         if data['data']['getRowsPersona']['status_code'] != 200:
             logger.error(
-                "SSOUChile - Api Error: {}, body: {}, username: {}".format(
+                "SSOUChile - Api Error: {}, body: {}, dato: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
-                    username))
+                    dato))
             raise Exception(
-                "SSOUChile - Doesnt exists username in PH API, status_code: {}, username: {}".format(
-                    result.status_code, username))
+                "SSOUChile - Doesnt exists username/dato in PH API, status_code: {}, dato: {}".format(
+                    result.status_code, dato))
         if len(data["data"]["getRowsPersona"]["persona"]) == 0:
             logger.error(
-                "SSOUChile - Doesnt exists rut in PH API, status_code: {}, body: {}, username: {}".format(
+                "SSOUChile - Doesnt exists username/rut in PH API, status_code: {}, body: {}, dato: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
-                    username))
+                    dato))
             raise Exception(
-                "SSOUChile - Doesnt exists username in PH API, status_code: {}, username: {}".format(
-                    result.status_code, username))
+                "SSOUChile - Doesnt exists username/rut in PH API, status_code: {}, dato: {}".format(
+                    result.status_code, dato))
         if len(data["data"]["getRowsPersona"]["persona"][0]['pasaporte']) == 0:
             logger.error(
                 "SSOUChile - Rut doesnt have account in PH API, status_code: {}, body: {}, rut: {}".format(
@@ -141,7 +148,7 @@ class SSOUChile(object):
         Get or create the user given the user data.
         """
         created = False
-        
+
         with transaction.atomic():
             exists_user = User.objects.filter(email__in=user_data['emails'])
             if exists_user:
@@ -175,7 +182,7 @@ class SSOUChile(object):
                         user_data['email'] = email
                 user = self.create_user_by_data(user_data)
                 created = True
-        return user, created
+            return user, created
 
     def create_user_by_data(self, user_data):
         """
@@ -409,11 +416,22 @@ class SSOLoginUChileVerificationData(View):
                 document = "0" + document
         try:
             ssologin_data = SSOLoginExtraData.objects.get(user=user)
+            ssologin_data.document = document
+            ssologin_data.type_document = data['type_document']
+            ssologin_data.is_completed = True
+            ssologin_data.save()
         except SSOLoginExtraData.DoesNotExist:
-            ssologin_data = SSOLoginExtraData.objects.create(user=user)
-        ssologin_data.document = document
-        ssologin_data.type_document = data['type_document']
-        ssologin_data.save()
+            try:
+                with transaction.atomic():
+                    SSOLoginExtraData.objects.create(
+                        user = user,
+                        document = document,
+                        type_document = data['type_document'],
+                        is_completed = True
+                        )
+            except Exception as e:
+                logger.error("SSOLoginVerificationData - Error update SSOLoginExtraData, user: {}, data: {}, error: {}".format(user, data, str(e)))
+                pass
 
     def data_valid(self, data, profile_sttgs, user):
         keys = ["country", "level_of_education", "gender", "year_of_birth", "document", "type_document"]
@@ -591,7 +609,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     )
                     ssologin_user.login_timestamp = datetime.utcnow()
                     ssologin_user.save()
-                if SSOLoginExtraData.objects.filter(user=ssologin_user.user).exists():
+                if SSOLoginExtraData.objects.filter(user=ssologin_user.user, is_completed=True).exists():
                     response = HttpResponseRedirect(redirect_url)
                 else:
                     response = HttpResponseRedirect(reverse('eol_sso_login:verification-data'))
@@ -651,4 +669,325 @@ class SSOLoginUChileCallback(View, SSOUChile):
                 )
                 aux_url = '{}?{}'.format(reverse('eol_sso_login:verification-pending'), urlencode({'mail':user.email}))
                 return HttpResponseRedirect(aux_url)
+
+class SSOEnroll(View, SSOUChile):
+    def get(self, request):
+        if not request.user.is_anonymous:
+            if request.user.is_staff:
+                context = {
+                    'datos': '', 
+                    'auto_enroll': True, 
+                    'modo': 'honor', 
+                    'send_email': True, 
+                    'curso': '',
+                    'document_type': 'rut'
+                    }
+                return render(request, 'eol_sso_login/external.html', context)
+            else:
+                logger.error("SSOEnroll - User is not staff, user: {}".format(request.user))
+        else:
+            logger.error("SSOEnroll - User is Anonymous")
+        raise Http404()
+    
+    def post(self, request):
+        if not request.user.is_anonymous:
+            if request.user.is_staff:
+                lista_data = []
+                aux_datos = request.POST.get("datos", "").lower().split('\n')
+                # limpieza de los datos ingresados
+                for x in aux_datos:
+                    x = x.strip()
+                    if x:
+                        lista_data.append([y.strip() for y in x.split(",")])
+                # verifica si el checkbox de auto enroll fue seleccionado
+                enroll = False
+                if request.POST.getlist("enroll"):
+                    enroll = True
+                # verifica si el checkbox de send_email fue seleccionado
+                send_email = False
+                if request.POST.getlist("send_email"):
+                    send_email = True
+                context = {
+                    'datos': request.POST.get("datos", ""),
+                    'curso': request.POST.get("course", ""),
+                    'document_type': request.POST.get("document_type", None),
+                    'auto_enroll': enroll,
+                    'send_email': send_email,
+                    'modo': request.POST.get("modes", None)}
+                # validacion de datos
+                context = self.validate_data(request.user, lista_data, context)
+                # retorna si hubo al menos un error
+                if len(context) > 6:
+                    return render(request, 'eol_sso_login/external.html', context)
+                course_id = context['curso'].strip()
+                lista_saved, lista_not_saved = self.enroll_create_user(
+                    course_id, context['modo'], lista_data, enroll, request.POST.get("document_type"))
+                login_url = request.build_absolute_uri('/login')
+                helpdesk_url = request.build_absolute_uri('/contact_form')
+                confirmation_url = request.build_absolute_uri(reverse('eol_sso_login:verification'))
+                course = get_course_by_id(CourseKey.from_string(course_id))
+                course_name =  course.display_name_with_default
+                email_saved = []
+                for d in lista_saved:
+                    if send_email:
+                        enroll_email.delay(d, course_name, login_url, helpdesk_url, confirmation_url)
+                    aux = d
+                    aux.pop('password', None)
+                    email_saved.append(aux)
+                context = {
+                    'datos': '',
+                    'auto_enroll': True,
+                    'send_email': True,
+                    'curso': '',
+                    'modo': 'honor',
+                    'document_type': 'rut',
+                    'action_send': send_email
+                }
+                if len(email_saved) > 0:
+                    context['lista_saved'] = email_saved
+                if len(lista_not_saved) > 0:
+                    context['lista_not_saved'] = lista_not_saved
+                return render(request, 'eol_sso_login/external.html', context)
+            else:
+                logger.error("SSOEnroll - User dont have permission or is not staff, user: {}".format(request.user))
+                raise Http404()
+        else:
+            logger.error("SSOEnroll - User is Anonymous")
+            raise Http404()
+    
+    def validate_data(self, user, lista_data, context):
+        wrong_data = []
+        duplicate_data = [[],[]]
+        original_data = [[],[]]
+        # si no se ingreso datos
+        if not lista_data:
+            logger.error("SSOEnroll - Empty Data, user: {}".format(user.id))
+            context['no_data'] = ''
+        if len(lista_data) > 50:
+            logger.error("SSOEnroll - data limit is 50, length data: {} user: {}".format(len(lista_data),user.id))
+            context['limit_data'] = ''
+        else:
+            for data in lista_data:
+                data = [d.strip() for d in data]
+                if len(data) == 1 or len(data) > 3:
+                    wrong_data.append(data)
+                else:
+                    if len(data) == 2:
+                        data.append("")
+                    if data[0] != "" and data[1] != "":
+                        aux_name = unidecode.unidecode(data[0])
+                        aux_name = re.sub(r'[^a-zA-Z0-9\_]', ' ', aux_name)
+                        if not re.match(regex_names, aux_name):
+                            logger.error("SSOEnroll - Wrong Name, not allowed specials characters, {}".format(data))
+                            wrong_data.append(data)
+                        elif not re.match(regex, data[1]):
+                            logger.error("SSOEnroll - Wrong Email {}, data: {}".format(data[1], data))
+                            wrong_data.append(data)
+                        elif data[2] != "" and context['document_type'] == 'rut' and not validarRut(data[2]):
+                            logger.error("SSOEnroll - Wrong Document {}, data: {}".format(data[2], data))
+                            wrong_data.append(data)
+                        elif data[1] in original_data[0] or (data[2] != '' and data[2] in original_data[1]):
+                            if data[1] in original_data[0]:
+                                duplicate_data[0].append(data[1])
+                            if data[2] != '' and data[2] in original_data[1]:
+                                duplicate_data[1].append(data[2])
+                        else:
+                            original_data[0].append(data[1])
+                            if data[2] != '':
+                                original_data[1].append(data[2])
+                    else:
+                        wrong_data.append(data)
+        if len(wrong_data) > 0:
+            context['wrong_data'] = wrong_data
+        if len(duplicate_data[0]) > 0:
+            context['duplicate_email'] = duplicate_data[0]
+        if len(duplicate_data[1]) > 0:
+            context['duplicate_rut'] = duplicate_data[1]
+        # si el modo es incorrecto
+        if not context['modo'] in ['honor', 'verified', 'audit']:
+            context['error_mode'] = ''
+        # si el document_type es incorrecto
+        if not context['document_type'] in ['rut', 'passport', 'dni']:
+            context['error_document_type'] = ''
+        # valida curso
+        if context['curso'] == "":
+            logger.error("SSOEnroll - Empty course, user: {}".format(user.id))
+            context['curso2'] = ''
+        # valida si existe el curso
+        else:
+            course_id = context['curso'].strip()
+            
+            if not self.validate_course(course_id):
+                context['error_curso'] = True
+                logger.error("SSOEnroll - Course dont exists, user: {}, course_id: {}".format(user.id, course_id))
+            if 'error_curso' not in context:
+                if not self.validate_user(user, course_id):
+                    context['error_permission'] = True
+                    logger.error("SSOEnroll - User dont have permission, user: {}, course_id: {}".format(user.id, course_id))
+        return context
+    
+    def validate_course(self, course_id):
+        """
+            Verify if course.id exists
+        """
+        from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+        try:
+            aux = CourseKey.from_string(course_id)
+            return CourseOverview.objects.filter(id=aux).exists()
+        except InvalidKeyError:
+            return False
+
+    def is_course_staff(self, user, course_id):
+        """
+            Verify if the user is staff course
+        """
+        try:
+            course_key = CourseKey.from_string(course_id)
+            course = get_course_with_access(user, "load", course_key)
+
+            return bool(has_access(user, 'staff', course))
+        except Exception:
+            return False
+
+    def is_instructor(self, user, course_id):
+        """
+            Verify if the user is instructor
+        """
+        try:
+            course_key = CourseKey.from_string(course_id)
+            course = get_course_with_access(user, "load", course_key)
+            return bool(has_access(user, 'instructor', course))
+        except Exception:
+            return False
+
+    def validate_user(self, user, course_id):
+        """
+            Verify if the user have permission
+        """
+        access = False
+        if not user.is_anonymous:
+            if user.is_staff:
+                access = True
+            if self.is_instructor(user, course_id):
+                access = True
+            if self.is_course_staff(user, course_id):
+                access = True
+        return access
+
+    def enroll_create_user(self, course_id, mode, lista_data, enroll, document_type):
+        lista_saved = []
+        lista_not_saved = []
+        for dato in lista_data:
+            if len(dato) == 2:
+                dato.append("")
+            if document_type == 'rut':
+                dato[2] = dato[2].upper()
+                dato[2] = dato[2].replace("-", "")
+                dato[2] = dato[2].replace(".", "")
+                while len(dato[2]) > 0 and len(dato[2]) < 10:
+                    dato[2] = "0" + dato[2]
+            aux_pass = BaseUserManager().make_random_password(12)
+            aux_pass = aux_pass.lower()
+            with transaction.atomic():
+                user, created = self.get_or_create_user_with_run(dato, aux_pass, document_type)
+            if user is None:
+                lista_not_saved.append(dato)
+            else:
+                if dato[2] != '' and not SSOLoginExtraData.objects.filter(user=user).exists():
+                    try:
+                        with transaction.atomic():
+                            SSOLoginExtraData.objects.create(
+                                user=user,
+                                document=dato[2],
+                                type_document=document_type
+                            )
+                    except Exception as e:
+                        logger.error("SSOEnroll - Error to create SSOLoginExtraData, user:{}, data: {}, error: {}".format(user, dato, str(e)))
+                        pass
+                self.enroll_course_user(user, course_id, enroll, mode)
+                lista_saved.append({
+                    'email': dato[1],
+                    'document': dato[2],
+                    'password': aux_pass,
+                    'username': user.username,
+                    'created': created,
+                    'email2': user.email
+                })
+        return lista_saved, lista_not_saved
+
+    def enroll_course_user(self, user, course_id, enroll, mode):
+        from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
+        if enroll:
+            CourseEnrollment.enroll(
+                user,
+                CourseKey.from_string(course_id),
+                mode=mode)
+        else:
+            CourseEnrollmentAllowed.objects.create(
+                course_id=CourseKey.from_string(course_id),
+                email=user.email,
+                user=user)
+
+    def get_or_create_user_with_run(self, dato, password, document_type):
+        if User.objects.filter(email=dato[1]).exists():
+            return User.objects.get(email=dato[1]), False
+        else:
+            if SSOLoginExtraData.objects.filter(document=dato[2], type_document=document_type).exists():
+                ssologin_data = SSOLoginExtraData.objects.get(document=dato[2], type_document=document_type)
+                return ssologin_data.user, False
+            else:
+                if document_type == 'rut' and dato[2] != "":
+                    user, created = self.get_user(dato, password)
+                else:
+                    user, created = self.create_user(dato, password)
+                return user, created
+
+    def get_user(self, dato, password):
+        try:
+            user_data = self.get_user_data(dato[2], is_rut=True)
+            try:
+                ssologin_user = SSOLoginCuentaUChile.objects.get(username=user_data['username'])
+                return ssologin_user.user, False
+            except SSOLoginCuentaUChile.DoesNotExist:
+                user_data['pass'] = password
+                user, created = self.get_or_create_user(user_data)
+                if user is None:
+                    return None, False
+                if created:
+                    ssologin_user = SSOLoginCuentaUChile.objects.create(
+                        user=user,
+                        username=user_data['username'],
+                        is_active=True
+                    )
+                else:
+                    try:
+                        ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
+                    except SSOLoginCuentaUChileRegistration.DoesNotExist:
+                        ssologin_register = SSOLoginCuentaUChileRegistration.objects.create(
+                            username=user_data['username'],
+                            user=user,
+                            activation_key=uuid.uuid4().hex
+                        )
+                    ssologin_user = SSOLoginCuentaUChile.objects.create(
+                        user=user,
+                        username=user_data['username'],
+                        is_active=False
+                    )
+                return user, created
+        except Exception as e:
+            logger.error("SSOEnroll - Error to get/create user with api ph, dato: {}, error: {}".format(dato, str(e)))
+            return self.create_user(dato, password)
+
+    def create_user(self, dato, password):
+        user_data = {
+            'nombreCompleto': dato[0],
+            'pass': password,
+            'email': dato[1]
+        }
+        try:
+            user = self.create_user_by_data(user_data)
+            return user, True
+        except Exception as e:
+            logger.error('SSOEnroll - Error to create_user_by_data, data: {}, error: {}'.format(dato, str(e)))
+            return None, False
 

@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^sso/verification$', SSOLoginUChileVerification.as_view(), name='verification'),
     url(r'^sso/verification_form$', SSOLoginUChileVerificationData.as_view(), name='verification-data'),
     url(r'^sso/verification_pending$', SSOLoginUChileVerificationPending.as_view(), name='verification-pending'),
+    url(r'^eol_sso_login/enroll$', SSOEnroll.as_view(), name='sso-enroll'),
 ]

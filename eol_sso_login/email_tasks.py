@@ -21,23 +21,22 @@ EMAIL_MAX_RETRIES = 5
     queue='edx.lms.core.low',
     default_retry_delay=EMAIL_DEFAULT_RETRY_DELAY,
     max_retries=EMAIL_MAX_RETRIES)
-def enroll_email(data, courses_name, login_url, helpdesk_url):
+def enroll_email(data, courses_name, login_url, helpdesk_url, confirmation_url):
     """
         Send mail to specific user
     """
     platform_name = configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)
     subject = 'Inscripción en el curso: {}'.format(courses_name)
-    user = User.objects.get(id=int(data['user_id']))
+    user = User.objects.get(username=data['username'])
     created = data['created']
     have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
     active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
     diff_email = user.email != data['email']
     ssologin_register = None
-    confirmation_url = "https://open.uchile.cl/"
     if not active_sso:
         try:
             ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
-            confirmation_url = 'https://open.uchile.cl{}?{}'.format(reverse('eol_sso_login:verification'), urlencode({'id':ssologin_register.activation_key}))
+            confirmation_url = '{}?{}'.format(confirmation_url, urlencode({'id':ssologin_register.activation_key}))
         except Exception:
             pass
     context = {

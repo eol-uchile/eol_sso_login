@@ -27,7 +27,8 @@ class SSOLoginExtraData(models.Model):
         ]
     MODE_CHOICES = (("rut", _("Rut")), ("passport", _("Passport")), ("dni", _("DNI")),)
     document = models.CharField(max_length=21, verbose_name=_("Document"), help_text=_("Document number"))
-    type_document = models.TextField(choices=MODE_CHOICES, verbose_name=_("Document type"), help_text=_("Select document type"), max_length=10)
+    type_document = models.CharField(choices=MODE_CHOICES, verbose_name=_("Document type"), help_text=_("Select document type"), max_length=10)
+    is_completed = models.BooleanField(default=False)
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,

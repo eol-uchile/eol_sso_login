@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: eol-ayuda@uchile.cl\n"
-"POT-Creation-Date: 2023-12-04 19:33+0000\n"
+"POT-Creation-Date: 2024-03-13 18:42+0000\n"
 "PO-Revision-Date: 2023-11-27 19:17+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es_419\n"
@@ -38,7 +38,7 @@ msgstr ""
 msgid "Incorrect Rut"
 msgstr ""
 
-#: eol_sso_login/forms.py:41
+#: eol_sso_login/forms.py:43
 msgid "Document already exists on platform"
 msgstr ""
 
@@ -55,17 +55,17 @@ msgid "DNI"
 msgstr ""
 
 #: eol_sso_login/models.py:29
-#: eol_sso_login/templates/eol_sso_login/verification.html:113
+#: eol_sso_login/templates/eol_sso_login/verification.html:117
 msgid "Document"
 msgstr ""
 
 #: eol_sso_login/models.py:29
-#: eol_sso_login/templates/eol_sso_login/verification.html:114
+#: eol_sso_login/templates/eol_sso_login/verification.html:118
 msgid "Document number"
 msgstr ""
 
 #: eol_sso_login/models.py:30
-#: eol_sso_login/templates/eol_sso_login/verification.html:100
+#: eol_sso_login/templates/eol_sso_login/verification.html:104
 msgid "Document type"
 msgstr ""
 
@@ -73,12 +73,21 @@ msgstr ""
 msgid "Select document type"
 msgstr ""
 
+#: eol_sso_login/templates/eol_sso_login/external.html:6
+msgid "Inscripcion y creación de ssuarios"
+msgstr ""
+
+#: eol_sso_login/templates/eol_sso_login/external.html:140
+#: eol_sso_login/templates/eol_sso_login/verification.html:178
+msgid "Update"
+msgstr ""
+
 #: eol_sso_login/templates/eol_sso_login/verification.html:8
 msgid "Verification"
 msgstr ""
 
 #: eol_sso_login/templates/eol_sso_login/verification.html:10
-#: eol_sso_login/templates/eol_sso_login/verification.html:83
+#: eol_sso_login/templates/eol_sso_login/verification.html:85
 msgid "Additional Information"
 msgstr ""
 
@@ -105,43 +114,48 @@ msgid ""
 " the same email address."
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:90
+#: eol_sso_login/templates/eol_sso_login/verification.html:71
+#: eol_sso_login/templates/eol_sso_login/verification.html:93
+msgid "Go to the main page"
+msgstr ""
+
+#: eol_sso_login/templates/eol_sso_login/verification.html:92
 msgid "Correctly Updated Data"
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:93
+#: eol_sso_login/templates/eol_sso_login/verification.html:96
 msgid ""
 "Error updating the information, check the fields if they are correct or "
 "refresh the page and try again, if the error persists, contact the help "
 "desk"
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:103
-#: eol_sso_login/templates/eol_sso_login/verification.html:123
-#: eol_sso_login/templates/eol_sso_login/verification.html:137
-#: eol_sso_login/templates/eol_sso_login/verification.html:151
-#: eol_sso_login/templates/eol_sso_login/verification.html:165
+#: eol_sso_login/templates/eol_sso_login/verification.html:98
+msgid "All fields are required"
+msgstr ""
+
+#: eol_sso_login/templates/eol_sso_login/verification.html:107
+#: eol_sso_login/templates/eol_sso_login/verification.html:127
+#: eol_sso_login/templates/eol_sso_login/verification.html:141
+#: eol_sso_login/templates/eol_sso_login/verification.html:155
+#: eol_sso_login/templates/eol_sso_login/verification.html:169
 msgid "Select your option"
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:120
+#: eol_sso_login/templates/eol_sso_login/verification.html:124
 msgid "Country or Region of Residence"
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:134
+#: eol_sso_login/templates/eol_sso_login/verification.html:138
 msgid "Education Completed"
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:148
+#: eol_sso_login/templates/eol_sso_login/verification.html:152
 msgid "Gender"
 msgstr ""
 
-#: eol_sso_login/templates/eol_sso_login/verification.html:162
+#: eol_sso_login/templates/eol_sso_login/verification.html:166
 msgid "Year of birth"
-msgstr ""
-
-#: eol_sso_login/templates/eol_sso_login/verification.html:174
-msgid "Update"
 msgstr ""
 
 #~ msgid "Documento"

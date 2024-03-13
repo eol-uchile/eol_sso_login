@@ -65,9 +65,10 @@
         </div>
     %elif context.get('action') == 'pending':
         <div class="ssoverification">
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning" role="alert" style="margin-bottom: 25px;">
                 ${_("We have sent you a verification email to {mail} to link your Mi.UChile account with the account found on the platform, which are associated with the same email address.").format(mail=mail)}
             </div>
+            <a href="/">${_("Go to the main page")}</a>
         </div>
     %elif context.get('action') == 'data':
     <style>
@@ -77,7 +78,8 @@
         }
         .result-msg{
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
     <h1>${_("Additional Information")}</h1>
@@ -88,10 +90,12 @@
                 <div class="result-msg">
                     %if context.get('result', '') == 'success':
                         <p style="color:rgb(56, 181, 197); margin-bottom: 15px;">${_("Correctly Updated Data")}.</p>
+                        <a href="/">${_("Go to the main page")}</a>
                     %endif
                     %if context.get('result', '') == 'error':
                         <p style="color:firebrick; margin-bottom: 15px;">${_("Error updating the information, check the fields if they are correct or refresh the page and try again, if the error persists, contact the help desk")}.</p>
                     %endif
+                    <p style="color:black; margin-bottom: 15px;"><b>${_("All fields are required")}.</b></p>
                 </div>
                 <div class="account-settings-section-body aboutTabSections-section-body">
                     <div class="u-field u-field-dropdown u-field-type_document editable-always mode-edit">

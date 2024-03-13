@@ -1,0 +1,142 @@
+## mako
+
+<%page expression_filter="h"/>
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="../main.html" />
+<%block name="pagetitle">${_("Inscripcion y creación de ssuarios")}</%block>
+<main id="main" aria-label="Content" tabindex="-1" class="static_pages">
+    <style>
+        #datos{
+            resize: both;
+            overflow: auto;
+            min-width: 500px;
+            min-height: 40px;
+            width: 600px;
+        }
+    </style>
+    <script type="text/javascript"> 
+        function limitTextarea(textarea, maxLines) {      
+            var lines = textarea.value.replace(/\r/g, '').trim();
+            lines = lines.split('\n');
+            lines = lines.filter(function(el) { return el; });              
+            if (maxLines && lines.length > maxLines) {
+                lines = lines.slice(0, maxLines);
+                textarea.value = lines.join('\n')
+            }
+        }
+    </script>
+    <h1>Inscripción y creación de usuarios</h1>
+    <div style="text-align: center;">
+        % if context.get('action_send', False) is True and context.get('lista_saved', UNDEFINED) is not UNDEFINED:
+                <p id="action_send" style="color:rgb(56, 181, 197); margin-bottom: 15px;">
+                    <b>Correos Enviados Correctamente.</b>
+                </p>
+            % endif
+            % if context.get('lista_saved', UNDEFINED) is not UNDEFINED:
+                <p id="lista_saved" style="color:rgb(56, 181, 197); margin-bottom: 15px;">
+                    <b>Usuarios obtenidos/creados e inscritos:</b></br>
+                    %for run in lista_saved:
+                        % if run['email2'] != run['email']:
+                            El correo asociado/inscrito del '${run['username']}' es ${run['email2']}
+                        % else:
+                            ${run['username']}, ${run['email']}
+                        % endif
+                        </br>
+                    %endfor
+                </p>
+            % endif
+            % if context.get('lista_not_saved', UNDEFINED) is not UNDEFINED:
+                <p id="lista_not_saved" style="color:firebrick; margin-bottom: 15px;">
+                    <b>Estos datos no se pudieron guardar, error al crear el usuario o no se encontró un correo disponible para crear el usuario:</b></br>
+                    %for data in lista_not_saved:
+                        Correo ingresado: ${data[0]}, N° documento: ${data[1]}.
+                        </br>
+                    %endfor
+                </p>
+            % endif
+            % if context.get('wrong_data', UNDEFINED) is not UNDEFINED:
+                <p id="wrong_data" style="color:firebrick; margin-bottom: 15px;">
+                    <b>Estos datos están incorrectos: </b></br>
+                    %for data in wrong_data:
+                        %for x in data:
+                            ${x} ,
+                        %endfor
+                        </br>
+                    %endfor
+                </p>
+            % endif
+            % if context.get('duplicate_email', UNDEFINED) is not UNDEFINED:
+                <p id="duplicate_email" style="color:firebrick; margin-bottom: 15px;">
+                    <b>Estos correos están duplicados en el formulario: </b></br>
+                    %for data in duplicate_email:
+                        ${data}</br>
+                    %endfor
+                </p>
+            % endif
+            % if context.get('duplicate_rut', UNDEFINED) is not UNDEFINED:
+                <p id="duplicate_rut" style="color:firebrick; margin-bottom: 15px;">
+                    <b>Estos n° documentos están duplicados en el formulario: </b></br>
+                    %for data in duplicate_rut:
+                        ${data}</br>
+                    %endfor
+                </p>
+            % endif
+            % if context.get('no_data', UNDEFINED) is not UNDEFINED:
+                <p id="no_data" style="color:firebrick; margin-bottom: 15px;">Falta agregar datos.</p>
+            % endif
+            % if context.get('limit_data', UNDEFINED) is not UNDEFINED:
+                <p id="limit_data" style="color:firebrick; margin-bottom: 15px;">El limite de inscripciones a la vez es 50.</p>
+            % endif
+            % if context.get('curso2', UNDEFINED) is not UNDEFINED:
+                <p id="curso2" style="color:firebrick; margin-bottom: 15px;">Falta agregar curso.</p>
+            % endif
+            % if context.get('error_curso', UNDEFINED) is not UNDEFINED:
+                <p id="error_curso" style="color:firebrick; margin-bottom: 15px;"><b>El id de curso no exite: ${curso}</b></p>
+            % endif
+            % if context.get('error_permission', UNDEFINED) is not UNDEFINED:
+                <p id="error_permission" style="color:firebrick; margin-bottom: 15px;"><b>Usuario no tiene permiso suficientes en el curso: ${curso}</b></p>
+            % endif
+            % if context.get('error_mode', UNDEFINED) is not UNDEFINED:
+                <p id="error_mode" style="color:firebrick; margin-bottom: 15px;">El modo es incorrecto.</p>
+            % endif
+            % if context.get('error_document_type', UNDEFINED) is not UNDEFINED:
+                <p id="error_document_type" style="color:firebrick; margin-bottom: 15px;">El tipo de documento es incorrecto.</p>
+            % endif
+            <p style="color:black; margin-bottom: 15px;">Limite de Inscripciones a la vez: 50.</p>
+    </div>
+    <form method="POST" style="display: table;margin-left: auto;margin-right: auto;">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}"/>
+        <div class="mb-3">
+            <label for="datos" class="form-label">Datos</label>
+            <textarea class="form-control" id="datos" name="datos" spellcheck="false" onkeyup="limitTextarea(this,50)" placeholder="juanito perez, a@b.c, 12345678-k(opcional)&#10;juanito perez, a@b.c, 12345678-k(opcional)">${datos}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="course" class="form-label">ID Curso</label>
+            <input type="text" class="form-control" id="course" name="course" placeholder="course-v1:mss+MSS001+2019_2" value="${curso}">
+        </div>
+        <div class="mb-3">
+            <label for="document_type" class="form-label">Tipo documento</label>
+            <select class="form-select" aria-label="Tipo documento" id="document_type" name="document_type" style="max-width: 150px;">
+                <option value="rut" ${'selected' if context.get('document_type', '') == 'rut'  else ''} >Rut</option>
+                <option value="passport" ${'selected' if context.get('document_type', '') == 'passport'  else ''} >Pasaporte</option>
+                <option value="dni" ${'selected' if context.get('document_type', '') == 'dni'  else ''} >DNI</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="modes" class="form-label">Modo</label>
+            <select class="form-select" aria-label="Modo" id="modes" name="modes" style="max-width: 150px;">
+                <option value="honor" ${'selected' if context.get('modo', '') == 'honor'  else ''} >Honor</option>
+                <option value="audit" ${'selected' if context.get('modo', '') == 'audit'  else ''} >Audit</option>
+            </select>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="1" id="enroll" name="enroll"  ${'checked' if context.get('auto_enroll', False) else ''}>
+            <label class="form-check-label" for="enroll">Auto Enroll</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="1" id="send_email" name="send_email"  ${'checked' if context.get('send_email', False) else ''}>
+            <label class="form-check-label" for="send_email">Enviar Invitación por Correo</label>
+        </div>
+        <input type="submit" style="text-shadow: none; border-color:white; background-color: #172c6b; background-image: none; display:block; margin: auto;width: 357px;height: 52px;" value='${_("Update")}'>
+    </form>
+</main>
