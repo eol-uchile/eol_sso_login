@@ -27,29 +27,25 @@ def enroll_email(data, courses_name, login_url, helpdesk_url, confirmation_url):
     """
     platform_name = configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)
     subject = 'Inscripción en el curso: {}'.format(courses_name)
-    user = User.objects.get(username=data['username'])
     created = data['created']
-    have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
-    active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
-    diff_email = user.email != data['email']
+    have_sso = data['have_sso']
+    active_sso = data['active_sso']
+    diff_email = data['email2'] != data['email']
     ssologin_register = None
     if not active_sso:
-        try:
-            ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
-            confirmation_url = '{}?{}'.format(confirmation_url, urlencode({'id':ssologin_register.activation_key}))
-        except Exception:
-            pass
+        confirmation_url = '{}?{}'.format(confirmation_url, urlencode({'id':data['activation_key']}))
+
     context = {
         "courses_name": courses_name,
         "platform_name": platform_name,
         "user_password": data['password'],
-        'user_email': user.email,
+        'user_email': data['email2'],
         'login_url': login_url,
-        'user_name': user.profile.name.strip(),
+        'user_name': data['fullname'],
         'helpdesk_url': helpdesk_url,
         'confirmation_url': confirmation_url
     }
-    emails = [user.email]
+    emails = [data['email2']]
     if diff_email:
         emails.append(data['email'])
 

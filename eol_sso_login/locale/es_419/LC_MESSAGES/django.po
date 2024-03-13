@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: eol-ayuda@uchile.cl\n"
-"POT-Creation-Date: 2024-03-13 18:42+0000\n"
+"POT-Creation-Date: 2024-03-13 19:42+0000\n"
 "PO-Revision-Date: 2023-11-27 19:17+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es_419\n"
@@ -78,9 +78,8 @@ msgid "Inscripcion y creación de ssuarios"
 msgstr ""
 
 #: eol_sso_login/templates/eol_sso_login/external.html:140
-#: eol_sso_login/templates/eol_sso_login/verification.html:178
-msgid "Update"
-msgstr "Actualizar"
+msgid "Send"
+msgstr "Enviar"
 
 #: eol_sso_login/templates/eol_sso_login/verification.html:8
 msgid "Verification"
@@ -140,7 +139,7 @@ msgstr ""
 
 #: eol_sso_login/templates/eol_sso_login/verification.html:98
 msgid "All fields are required"
-msgstr ""
+msgstr "Todos los campos son obligatorios"
 
 #: eol_sso_login/templates/eol_sso_login/verification.html:107
 #: eol_sso_login/templates/eol_sso_login/verification.html:127
@@ -165,6 +164,10 @@ msgstr "Género"
 #: eol_sso_login/templates/eol_sso_login/verification.html:166
 msgid "Year of birth"
 msgstr "Año de nacimiento"
+
+#: eol_sso_login/templates/eol_sso_login/verification.html:178
+msgid "Update"
+msgstr "Actualizar"
 
 #~ msgid ""
 #~ "We send you a verification email "

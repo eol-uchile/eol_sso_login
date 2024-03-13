@@ -905,13 +905,26 @@ class SSOEnroll(View, SSOUChile):
                         logger.error("SSOEnroll - Error to create SSOLoginExtraData, user:{}, data: {}, error: {}".format(user, dato, str(e)))
                         pass
                 self.enroll_course_user(user, course_id, enroll, mode)
+                have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
+                active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
+                activation_key = ''
+                if not active_sso:
+                    try:
+                        ssologin_register = SSOLoginCuentaUChileRegistration.objects.get(user=user)
+                        activation_key = ssologin_register.activation_key
+                    except Exception:
+                        pass
                 lista_saved.append({
                     'email': dato[1],
                     'document': dato[2],
                     'password': aux_pass,
                     'username': user.username,
                     'created': created,
-                    'email2': user.email
+                    'email2': user.email,
+                    'have_sso': have_sso,
+                    'active_sso': active_sso,
+                    'fullname': user.profile.name.strip(),
+                    'activation_key': activation_key
                 })
         return lista_saved, lista_not_saved
 
