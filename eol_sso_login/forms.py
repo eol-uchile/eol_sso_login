@@ -18,6 +18,7 @@ class ExtraInfoForm(forms.ModelForm):
         super(ExtraInfoForm, self).__init__(*args, **kwargs)
 
     def clean(self):
+        cleaned_data = super(ExtraInfoForm, self).clean()
         document = self.cleaned_data.get("document").upper().strip()
         type_document = self.cleaned_data.get("type_document")
         if len(document) == 0:
@@ -41,7 +42,7 @@ class ExtraInfoForm(forms.ModelForm):
                 document = "0" + document
         if SSOLoginExtraData.objects.filter(document=document, type_document=type_document).exists():
             raise forms.ValidationError(_('Document already exists on platform'))
-        return document
+        return cleaned_data
 
     def save(self, commit=True):
         instance = super(ExtraInfoForm, self).save(commit=False)
