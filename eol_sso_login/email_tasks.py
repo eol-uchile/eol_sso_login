@@ -3,6 +3,7 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from django.conf import settings
 
 from celery import task
+from common.djangoapps.student.models import Registration
 from django.core.mail import send_mail
 from django.utils.html import strip_tags
 from django.contrib.auth.models import User
@@ -21,7 +22,7 @@ EMAIL_MAX_RETRIES = 5
     queue='edx.lms.core.low',
     default_retry_delay=EMAIL_DEFAULT_RETRY_DELAY,
     max_retries=EMAIL_MAX_RETRIES)
-def enroll_email(data, courses_name, login_url, helpdesk_url, confirmation_url):
+def enroll_email(data, courses_name, login_url, helpdesk_url, confirmation_url, activation_url):
     """
         Send mail to specific user
     """
@@ -43,7 +44,8 @@ def enroll_email(data, courses_name, login_url, helpdesk_url, confirmation_url):
         'login_url': login_url,
         'user_name': data['fullname'],
         'helpdesk_url': helpdesk_url,
-        'confirmation_url': confirmation_url
+        'confirmation_url': confirmation_url,
+        'confirm_activation_link': '{}/{}'.format(activation_url, data['activation_key_edx'])
     }
     emails = [data['email2']]
     if diff_email:
@@ -51,7 +53,7 @@ def enroll_email(data, courses_name, login_url, helpdesk_url, confirmation_url):
 
     if created:
         if have_sso and active_sso:
-            html_message = render_to_string('eol_sso_login/emails/sso.txt', context)
+            html_message = render_to_string('eol_sso_login/emails/sso_activation.txt', context)
         elif not have_sso:
             html_message = render_to_string('eol_sso_login/emails/normal_pass.txt', context)
         elif have_sso and not active_sso:
