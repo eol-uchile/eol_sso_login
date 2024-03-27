@@ -63,11 +63,13 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
     def setUp(self):
         super(TestSSOLoginUChileCallback, self).setUp()
         self.client = Client()
+        self.client2 = Client()
         with patch('common.djangoapps.student.models.cc.User.save'):
             self.user = UserFactory(
                 username='testuser3',
                 password='12345',
                 email='test555@test.test')
+            self.client2.login(username='testuser3', password='12345')
             self.user2 = UserFactory(
                 username='testuser22',
                 password='12345',
@@ -79,7 +81,19 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
             Test normal process with extradata model
         """
         SSOLoginCuentaUChile.objects.create(user=self.user, username='test.name', is_active=True)
-        SSOLoginExtraData.objects.create(user=self.user,document='0123456789',type_document='rut', is_completed=True)
+        SSOLoginExtraData.objects.create(user=self.user,document='0111111111',type_document='rut')
+        post_data = {
+            'country': "CL",
+            'level_of_education': 'p',
+            'gender': 'm',
+            'year_of_birth': '1994'
+        }
+        result = self.client2.post(reverse('eol_sso_login:verification-data'), post_data)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.profile.year_of_birth, int(post_data['year_of_birth']))
+        self.assertEqual(self.user.profile.gender, post_data['gender'])
+        self.assertEqual(self.user.profile.country, post_data['country'])
+        self.assertEqual(self.user.profile.level_of_education, post_data['level_of_education'])
         # Assert requests.get calls
         get.side_effect = [namedtuple("Request",
                                       ["status_code",
@@ -110,6 +124,10 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         self.assertEqual(request.path, '/')
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
+        ssologin_data = SSOLoginExtraData.objects.get(user=self.user)
+        self.assertEqual(ssologin_data.document, '0111111111')
+        self.assertEqual(ssologin_data.type_document, 'rut')
+
 
     @patch('requests.get')
     def test_login_user_wo_extradata(self, get):
@@ -146,7 +164,10 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(request.path, '/sso/verification_form')
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
-        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
+        ssologin_data = SSOLoginExtraData.objects.get(user=self.user)
+        self.assertEqual(ssologin_data.document, '0111111111')
+        self.assertEqual(ssologin_data.type_document, 'rut')
 
     @patch('requests.get')
     def test_login_user_sso_no_active(self, get):
@@ -188,8 +209,11 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
             args['mail'][0],
             self.user.email)
         self.assertEqual(SSOLoginCuentaUChile.objects.all().count(), 1)
-        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
         self.assertEqual(SSOLoginCuentaUChileRegistration.objects.all().count(), 1)
+        ssologin_data = SSOLoginExtraData.objects.get(user=self.user)
+        self.assertEqual(ssologin_data.document, '0111111111')
+        self.assertEqual(ssologin_data.type_document, 'rut')
 
     @patch('requests.get')
     def test_login_create_user(self, get):
@@ -222,9 +246,14 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         ssologin_user = SSOLoginCuentaUChile.objects.get(username="test.name")
         self.assertEqual(ssologin_user.user.email, 'test@test.test')
         self.assertTrue(ssologin_user.is_active)
+        self.assertFalse(ssologin_user.user.is_active)
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/sso/verification_form')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
+        ssologin_data = SSOLoginExtraData.objects.get(user=ssologin_user.user)
+        self.assertEqual(ssologin_data.document, '0111111111')
+        self.assertEqual(ssologin_data.type_document, 'rut')
 
     @patch('requests.get')
     def test_login_create_ssologin_user(self, get):
@@ -265,6 +294,10 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         self.assertEqual(
             args['mail'][0],
             self.user.email)
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
+        ssologin_data = SSOLoginExtraData.objects.get(user=self.user)
+        self.assertEqual(ssologin_data.document, '0111111111')
+        self.assertEqual(ssologin_data.type_document, 'rut')
 
     @patch('requests.get')
     def test_login_error_create_user(self, get):
@@ -297,6 +330,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     def test_get_or_create_user(self):
         """
@@ -375,6 +409,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_error_to_get_data_2(self, get):
@@ -404,6 +439,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_error_to_get_data_3(self, get):
@@ -427,6 +463,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_error_to_get_data_4(self, get):
@@ -450,6 +487,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_error_to_get_data_5(self, get):
@@ -479,6 +517,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_error_to_get_data_6(self, get):
@@ -508,6 +547,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_error_to_get_data_7(self, get):
@@ -536,6 +576,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
 
 
@@ -568,6 +609,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_wrong_ticket(self, get):
@@ -596,6 +638,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     @patch('requests.get')
     def test_login_wrong_username(self, get):
@@ -619,6 +662,7 @@ class TestSSOLoginUChileCallback(ModuleStoreTestCase):
         request = urllib.parse.urlparse(result.url)
         self.assertEqual(result.status_code, 302)
         self.assertEqual(request.path, '/eol_sso_login/uchile_login/')
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
 
     def test_generate_username(self):
         """
@@ -883,19 +927,15 @@ class TestSSOLoginUChileVerificationData(TestCase):
             'country': "CL",
             'level_of_education': 'p',
             'gender': 'm',
-            'year_of_birth': '1994',
-            'document': 'ASDQWE',
-            'type_document': 'passport'
+            'year_of_birth': '1994'
         }
         self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
         result = self.client.post(reverse('eol_sso_login:verification-data'), post_data)
-        self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
-        ssologin_data = SSOLoginExtraData.objects.get(user=self.user)
-        self.assertEqual(ssologin_data.document, post_data['document'])
-        self.assertEqual(ssologin_data.type_document, post_data['type_document'])
+        self.assertEqual(SSOLoginExtraData.objects.all().count(), 0)
         self.user.refresh_from_db()
         self.assertEqual(self.user.profile.year_of_birth, int(post_data['year_of_birth']))
         self.assertEqual(self.user.profile.gender, post_data['gender'])
+        self.assertEqual(self.user.profile.country, post_data['country'])
         self.assertEqual(self.user.profile.level_of_education, post_data['level_of_education'])
 
     def test_post_exists_extradata(self):
@@ -907,21 +947,15 @@ class TestSSOLoginUChileVerificationData(TestCase):
             'level_of_education': 'p',
             'gender': 'm',
             'year_of_birth': '1994',
-            'document': 'ASDQWE',
-            'type_document': 'passport'
         }
-        ssologin_data = SSOLoginExtraData.objects.create(user=self.user,document='0123456789',type_document='rut')
         result = self.client.post(reverse('eol_sso_login:verification-data'), post_data)
-        self.assertEqual(SSOLoginExtraData.objects.all().count(), 1)
-        ssologin_data.refresh_from_db()
-        self.assertEqual(ssologin_data.document, post_data['document'])
-        self.assertEqual(ssologin_data.type_document, post_data['type_document'])
         self.user.refresh_from_db()
         self.assertEqual(self.user.profile.year_of_birth, int(post_data['year_of_birth']))
         self.assertEqual(self.user.profile.gender, post_data['gender'])
+        self.assertEqual(self.user.profile.country, post_data['country'])
         self.assertEqual(self.user.profile.level_of_education, post_data['level_of_education'])
     
-    def test_post(self):
+    def test_post_user_anonymous(self):
         """
             test post method when user is anonymous
         """
@@ -938,9 +972,7 @@ class TestSSOLoginUChileVerificationData(TestCase):
             'country': "CL",
             'level_of_education': 'p',
             'gender': 'm',
-            'year_of_birth': '1994',
-            'document': 'ASDQWE',
-            'type_document': 'passport'
+            'year_of_birth': '1994'
         }
         profile_sttgs = SSOLoginUChileVerificationData().get_profile_settings()
         result = SSOLoginUChileVerificationData().data_valid(post_data, profile_sttgs, self.user)
@@ -982,61 +1014,6 @@ class TestSSOLoginUChileVerificationData(TestCase):
         result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
         self.assertFalse(result)
 
-        # wrong type_document
-        aux_data = post_data.copy()
-        aux_data['type_document'] = 'cccc'
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
-
-        # len document equals zero
-        aux_data = post_data.copy()
-        aux_data['document'] = ''
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
-        
-        # wrong len document
-        aux_data = post_data.copy()
-        aux_data['document'] = 'a'
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
-
-        # wrong document
-        aux_data = post_data.copy()
-        aux_data['type_document'] = 'dni'
-        aux_data['document'] = 'PASDQWE-@ASD'
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
-
-        # document wrong rut
-        aux_data = post_data.copy()
-        aux_data['type_document'] = 'rut'
-        aux_data['document'] = '1234532'
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
-
-        # document wrong rut
-        aux_data = post_data.copy()
-        aux_data['type_document'] = 'rut'
-        aux_data['document'] = 'asdadasd'
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
-
-        # already exists document
-        SSOLoginExtraData.objects.create(
-            document=post_data['document'], 
-            type_document=post_data['type_document'], 
-            user=self.user)
-        aux_data = post_data.copy()
-        aux_data['type_document'] = 'passport'
-        aux_data['document'] = 'P123456'
-        
-        SSOLoginExtraData.objects.create(
-            document=aux_data['document'], 
-            type_document=aux_data['type_document'], 
-            user=self.user2)
-
-        result = SSOLoginUChileVerificationData().data_valid(aux_data, profile_sttgs, self.user)
-        self.assertFalse(result)
 
 class TestSSOLoginAPI(TestCase):
     def setUp(self):
@@ -1046,6 +1023,71 @@ class TestSSOLoginAPI(TestCase):
                 username='testuser',
                 password='12345',
                 email='test@test.test')
+
+    def test_send_activation_email(self):
+        """
+            test send_activation_email() normal process
+        """
+        post_data = {
+            'email': self.user.email,
+        }
+        result = self.client.post(reverse('eol_sso_login:api-send_activation_email'), post_data)
+        self.assertEqual(result.status_code, 200)
+        respose = json.loads(result._container[0].decode())
+        expected = {
+            'result': 'success',
+            }
+        self.assertEqual(respose, expected)
+
+    def test_send_activation_email_wrong_method(self):
+        """
+            test send_activation_email() wrong method
+        """
+        post_data = {
+            'email': self.user.email,
+        }
+        result = self.client.get(reverse('eol_sso_login:api-send_activation_email'), post_data)
+        self.assertEqual(result.status_code, 400)
+
+    def test_send_activation_email_no_params(self):
+        """
+            test send_activation_email() no data
+        """
+        post_data = {}
+        result = self.client.post(reverse('eol_sso_login:api-send_activation_email'), post_data)
+        self.assertEqual(result.status_code, 400)
+
+    def test_send_activation_email_user_no_exists(self):
+        """
+            test send_activation_email() when user dont exists
+        """
+        post_data = {
+            'email': 'correo@correo.cl',
+        }
+        result = self.client.post(reverse('eol_sso_login:api-send_activation_email'), post_data)
+        self.assertEqual(result.status_code, 200)
+        respose = json.loads(result._container[0].decode())
+        expected = {
+            'result': 'error', 
+            'error':'email_no_exists'
+            }
+        self.assertEqual(respose, expected)
+
+    def test_send_activation_email_empty(self):
+        """
+            test send_activation_email() when email param is empty
+        """
+        post_data = {
+            'email': '',
+        }
+        result = self.client.post(reverse('eol_sso_login:api-send_activation_email'), post_data)
+        self.assertEqual(result.status_code, 200)
+        respose = json.loads(result._container[0].decode())
+        expected = {
+            'result': 'error', 
+            'error':'no_email'
+            }
+        self.assertEqual(respose, expected)
 
     def test_registration_validation(self):
         """
@@ -1647,7 +1689,6 @@ class TestSSOEnroll(ModuleStoreTestCase):
         ssologin_xdata = SSOLoginExtraData.objects.get(user=ssologin_user.user)
         self.assertEqual(ssologin_xdata.type_document, "rut")
         self.assertEqual(ssologin_xdata.document, "0000000108")
-        self.assertFalse(ssologin_xdata.is_completed)
         self.assertTrue(SSOLoginCuentaUChileRegistration.objects.filter(user=ssologin_user.user, username=ssologin_user.username).exists())
 
     def test_enroll_post_with_run_exists_email(self):

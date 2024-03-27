@@ -1,5 +1,7 @@
 import logging
 
+from common.djangoapps.student.models import Registration
+from common.djangoapps.student.views import compose_and_send_activation_email
 from common.djangoapps.util.json_request import JsonResponse
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -93,3 +95,20 @@ def check_email(request):
         'active': active,
         'sso_active': sso_active,
         })
+
+def send_activation_email(request):
+    if request.method != "POST":
+        return HttpResponse(status=400)
+    if 'email' not in request.POST:
+        return HttpResponse(status=400)
+    email = request.POST.get('email', '').lower().strip()
+    if len(email) == 0:
+        return JsonResponse({'result': 'error', 'error':'no_email'})
+    if User.objects.filter(email=email).exists():
+        registration = Registration()
+        user = User.objects.get(email=email)
+        if not Registration.objects.filter(user=user).exists():
+            registration.register(user)
+        compose_and_send_activation_email(user, user.profile)
+        return JsonResponse({'result': 'success'})
+    return JsonResponse({'result': 'error', 'error':'email_no_exists'})
