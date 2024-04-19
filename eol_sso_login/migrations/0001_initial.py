@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('document', models.CharField(help_text='Número de documento', max_length=21, verbose_name='Documento')),
-                ('type_document', models.TextField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], help_text='Seleccione el tipo de documento', verbose_name='Tipo de documento')),
+                ('type_document', models.CharField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], max_length=10, help_text='Seleccione el tipo de documento', verbose_name='Tipo de documento')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
