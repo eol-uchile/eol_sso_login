@@ -693,7 +693,7 @@ class SSOEnroll(View, SSOUChile):
         if not request.user.is_anonymous:
             if request.user.is_staff:
                 lista_data = []
-                aux_datos = request.POST.get("datos", "").lower().split('\n')
+                aux_datos = request.POST.get("datos", "").split('\n')
                 # limpieza de los datos ingresados
                 for x in aux_datos:
                     x = x.strip()
