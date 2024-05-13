@@ -81,6 +81,11 @@
             flex-direction: column;
             align-items: center;
         }
+        input:disabled, input[readonly],
+        select:disabled, select[readonly] {
+            background-color: #e9ecef !important;
+            opacity: 1;
+        }
     </style>
     <h1>${_("Additional Information")}</h1>
     <div class="account-settings-sections">
@@ -103,7 +108,7 @@
                             <label class="u-field-title field-label" for="u-field-select-type_document">
                                 ${_("Document type")}
                             </label>
-                            <select name="type_document" id="u-field-select-type_document" aria-describedby="u-field-help-message-type_document">
+                            <select id="u-field-select-type_document" aria-describedby="u-field-help-message-type_document" disabled>
                                 <option value="" disabled selected>${_("Select your option")}</option>
                                 %for k, v in sttgs_data['type_document']:
                                     <option value="${k}" ${'selected' if user_data['type_document'] == k else ''} >${v}</option>
@@ -115,7 +120,7 @@
                     <div class="u-field u-field-text u-field-document editable-always mode-edit">
                         <div class="u-field-value field">
                             <label class="u-field-title field-label" for="field-input-document">${_("Document")}</label>
-                            <input class="field-input input-text" placeholder='${_("Document number")}' type="text" id="field-input-document" title='${_("Document number")}' aria-describedby="u-field-message-help-document" name="document" value='${user_data["document"]}'>
+                            <input class="field-input input-text" placeholder='${_("Document number")}' type="text" id="field-input-document" title='${_("Document number")}' aria-describedby="u-field-message-help-document" value='${user_data["document"]}' disabled>
                         </div>
                     </div>
                     <div class="u-field u-field-dropdown u-field-country editable-always mode-edit">

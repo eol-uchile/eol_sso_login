@@ -9,7 +9,8 @@ import requests
 import unidecode
 import urllib.parse
 
-from common.djangoapps.student.models import UserProfile
+from common.djangoapps.student.models import UserProfile, Registration
+from common.djangoapps.student.views import compose_and_send_activation_email
 from datetime import datetime
 from django.conf import settings
 from django_countries import countries
@@ -208,8 +209,11 @@ class SSOUChile(object):
             #ignore_email_blacklist=True # only eol/edx-platform have this params
         )
         user, _, reg = do_create_account(form)
-        reg.activate()
+        #reg.activate()
         reg.save()
+        registration = Registration()
+        if not Registration.objects.filter(user=user).exists():
+            registration.register(user)
         #from common.djangoapps.student.models import create_comments_service_user
         #create_comments_service_user(user)
 
@@ -408,33 +412,9 @@ class SSOLoginUChileVerificationData(View):
         user.profile.level_of_education = data['level_of_education']
         user.profile.country = data['country']
         user.profile.save()
-        document = data['document'].upper().strip()
-        if data['type_document'] == 'rut':
-            document = document.replace("-", "")
-            document = document.replace(".", "")
-            while len(document) < 10:
-                document = "0" + document
-        try:
-            ssologin_data = SSOLoginExtraData.objects.get(user=user)
-            ssologin_data.document = document
-            ssologin_data.type_document = data['type_document']
-            ssologin_data.is_completed = True
-            ssologin_data.save()
-        except SSOLoginExtraData.DoesNotExist:
-            try:
-                with transaction.atomic():
-                    SSOLoginExtraData.objects.create(
-                        user = user,
-                        document = document,
-                        type_document = data['type_document'],
-                        is_completed = True
-                        )
-            except Exception as e:
-                logger.error("SSOLoginVerificationData - Error update SSOLoginExtraData, user: {}, data: {}, error: {}".format(user, data, str(e)))
-                pass
 
     def data_valid(self, data, profile_sttgs, user):
-        keys = ["country", "level_of_education", "gender", "year_of_birth", "document", "type_document"]
+        keys = ["country", "level_of_education", "gender", "year_of_birth"]
         if not all(k in data for k in keys):
             logger.info('SSOLoginVerificationData - Missing params, user: {}, POST: {}'.format(user, data))
             return False
@@ -458,40 +438,6 @@ class SSOLoginUChileVerificationData(View):
         except ValueError:
             logger.info('SSOLoginVerificationData - Year is not a number, user: {}, POST: {}'.format(user, data))
             return False
-        #tuple
-        if not (any(data['type_document'] in i for i in profile_sttgs['type_document'])):
-            logger.info('SSOLoginVerificationData - Wrong type_document, user: {}, POST: {}'.format(user, data))
-            return False
-        #string
-        document = data['document']
-        type_document = data['type_document']
-        if len(document) == 0:
-            logger.info('SSOLoginVerificationData - document length is zero, user: {}, POST: {}'.format(user, data))
-            return False
-        if 5 > len(document) or len(document) > 20:
-            logger.info('SSOLoginVerificationData - Wrong document length, user: {}, POST: {}'.format(user, data))
-            return False
-        if type_document != 'rut' and not document.isalnum():
-            logger.info('SSOLoginVerificationData - Wrong document, it doesnt alpha numeric, user: {}, POST: {}'.format(user, data))
-            return False
-        try:
-            if type_document == 'rut' and not validarRut(document):
-                logger.info('SSOLoginVerificationData - Wrong document when is Rut, user: {}, POST: {}'.format(user, data))
-                return False
-        except ValueError:
-            logger.info('SSOLoginVerificationData - Wrong document when is Rut, user: {}, POST: {}'.format(user, data))
-            return False
-
-        if type_document == 'rut':
-            document = document.replace("-", "")
-            document = document.replace(".", "")
-            while len(document) < 10:
-                document = "0" + document
-
-        if not SSOLoginExtraData.objects.filter(document=document, type_document=type_document, user=user).exists():
-            if SSOLoginExtraData.objects.filter(document=document, type_document=type_document).exists():
-                logger.info('SSOLoginVerificationData - document with type document already exists, user: {}, POST: {}'.format(user, data))
-                return False
         return True
 
     def get_profile_settings(self):
@@ -589,6 +535,34 @@ class SSOLoginUChileCallback(View, SSOUChile):
 
         return None
 
+    def create_extra_data(self, user, document, document_type=None):
+        if document_type is not None: 
+            aux = document_type
+        else:
+            if document[0].isnumeric():
+                aux = 'rut'
+            else:
+                aux = 'passport'
+        if document != "" and not SSOLoginExtraData.objects.filter(user=user).exists():
+            try:
+                with transaction.atomic():
+                    SSOLoginExtraData.objects.create(
+                        user=user,
+                        document=document,
+                        type_document=aux
+                    )
+            except Exception as e:
+                logger.error("SSOLoginUChileCallback - Error to create SSOLoginExtraData, user:{}, document: {}, error: {}".format(user, document, str(e)))
+                pass
+
+    def check_extra_data_is_completed(self, user):
+        return all(( 
+            user.profile.year_of_birth is not None,
+            user.profile.gender != '',
+            user.profile.level_of_education != '',
+            user.profile.country != '',
+            ))
+
     def create_login_user(self, request, username, error_url, redirect_url):
         """
         Get or create the user and log him in.
@@ -599,6 +573,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
         user_data = self.get_user_data(username)
         try:
             ssologin_user = SSOLoginCuentaUChile.objects.get(username=user_data['username'])
+            self.create_extra_data(ssologin_user.user, user_data['rut'])
             if ssologin_user.is_active:
                 if request.user.is_anonymous or request.user.id != ssologin_user.user.id:
                     logout(request)
@@ -609,7 +584,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     )
                     ssologin_user.login_timestamp = datetime.utcnow()
                     ssologin_user.save()
-                if SSOLoginExtraData.objects.filter(user=ssologin_user.user, is_completed=True).exists():
+                if self.check_extra_data_is_completed(ssologin_user.user):
                     response = HttpResponseRedirect(redirect_url)
                 else:
                     response = HttpResponseRedirect(reverse('eol_sso_login:verification-data'))
@@ -633,6 +608,7 @@ class SSOLoginUChileCallback(View, SSOUChile):
             if user is None:
                 logger.error("SSOLoginUChileCallback - Error to get or create user, user_data: {}".format(user_data))
                 return HttpResponseRedirect('{}?next={}'.format(error_url, redirect_url))
+            self.create_extra_data(user, user_data['rut'])
             if created:
                 ssologin_user = SSOLoginCuentaUChile.objects.create(
                     user=user,
@@ -640,6 +616,10 @@ class SSOLoginUChileCallback(View, SSOUChile):
                     is_active=True,
                     login_timestamp=datetime.utcnow()
                 )
+                registration = Registration()
+                if not Registration.objects.filter(user=user).exists():
+                    registration.register(user)
+                compose_and_send_activation_email(user, user.profile)
                 response = HttpResponseRedirect(reverse('eol_sso_login:verification-data'))
                 if request.user.is_anonymous or request.user.id != ssologin_user.user.id:
                     logout(request)
@@ -724,13 +704,14 @@ class SSOEnroll(View, SSOUChile):
                     course_id, context['modo'], lista_data, enroll, request.POST.get("document_type"))
                 login_url = request.build_absolute_uri('/login')
                 helpdesk_url = request.build_absolute_uri('/contact_form')
+                activation_url = request.build_absolute_uri('/activate')
                 confirmation_url = request.build_absolute_uri(reverse('eol_sso_login:verification'))
                 course = get_course_by_id(CourseKey.from_string(course_id))
                 course_name =  course.display_name_with_default
                 email_saved = []
                 for d in lista_saved:
                     if send_email:
-                        enroll_email.delay(d, course_name, login_url, helpdesk_url, confirmation_url)
+                        enroll_email.delay(d, course_name, login_url, helpdesk_url, confirmation_url, activation_url)
                     aux = d
                     aux.pop('password', None)
                     email_saved.append(aux)
@@ -914,6 +895,12 @@ class SSOEnroll(View, SSOUChile):
                         activation_key = ssologin_register.activation_key
                     except Exception:
                         pass
+                activation_key_edx = ''
+                try:
+                    registr = Registration.objects.get(user=user)
+                    activation_key_edx = registr.activation_key
+                except Exception:
+                    pass
                 lista_saved.append({
                     'email': dato[1],
                     'document': dato[2],
@@ -924,7 +911,8 @@ class SSOEnroll(View, SSOUChile):
                     'have_sso': have_sso,
                     'active_sso': active_sso,
                     'fullname': user.profile.name.strip(),
-                    'activation_key': activation_key
+                    'activation_key': activation_key,
+                    'activation_key_edx': activation_key_edx
                 })
         return lista_saved, lista_not_saved
 
