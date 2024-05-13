@@ -38,7 +38,7 @@ from .utils import validarRut
 
 logger = logging.getLogger(__name__)
 regex = r'^(([^ñáéíóú<>()\[\]\.,;:\s@\"]+(\.[^ñáéíóú<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^ñáéíóú<>()[\]\.,;:\s@\"]+\.)+[^ñáéíóú<>()[\]\.,;:\s@\"]{2,})$'
-regex_names = r'^[A-Za-z\s\_]+$'
+regex_names = r'^[A-Za-z0-9\s\_]+$'
 USERNAME_MAX_LENGTH = 30
 
 
