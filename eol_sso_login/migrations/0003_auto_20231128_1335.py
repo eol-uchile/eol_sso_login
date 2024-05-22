@@ -15,9 +15,9 @@ class Migration(migrations.Migration):
             name='document',
             field=models.CharField(help_text='Document number', max_length=21, verbose_name='Document'),
         ),
-        migrations.AlterField(
-            model_name='ssologinextradata',
-            name='type_document',
-            field=models.TextField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], help_text='Select document type', max_length=10, verbose_name='Document type'),
-        ),
+        # migrations.AlterField(
+        #     model_name='ssologinextradata',
+        #     name='type_document',
+        #     field=models.TextField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], help_text='Select document type', max_length=10, verbose_name='Document type'),
+        # ),
     ]

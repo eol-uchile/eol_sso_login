@@ -10,6 +10,7 @@ import unidecode
 import urllib.parse
 
 from common.djangoapps.student.models import UserProfile
+from common.djangoapps.util.json_request import JsonResponse, JsonResponseBadRequest
 from datetime import datetime
 from django.conf import settings
 from django_countries import countries
@@ -713,41 +714,66 @@ class SSOEnroll(View, SSOUChile):
                     'document_type': request.POST.get("document_type", None),
                     'auto_enroll': enroll,
                     'send_email': send_email,
-                    'modo': request.POST.get("modes", None)}
+                    'modo': request.POST.get("modes", None),
+                    'action': request.POST.get("action", "enroll")
+                    }
+                    
                 # validacion de datos
-                context = self.validate_data(request.user, lista_data, context)
+                procedence = 'external'
+                if hasattr(request, 'META'):
+                    if hasattr(request.META, 'HTTP_REFERER'):
+                        if '/instructor' in request.META['HTTP_REFERER']:
+                            context, lista_data = self.validate_document(request.user, lista_data, context)
+                            procedence = 'instructor'
+                        else: 
+                            context = self.validate_data(request.user, lista_data, context)
+                    else:
+                        context = self.validate_data(request.user, lista_data, context)
+                else:
+                    context = self.validate_data(request.user, lista_data, context)
+
                 # retorna si hubo al menos un error
-                if len(context) > 6:
-                    return render(request, 'eol_sso_login/external.html', context)
+                if len(context) > 7:
+                    if procedence == 'external':
+                        return render(request, 'eol_sso_login/external.html', context)
                 course_id = context['curso'].strip()
-                lista_saved, lista_not_saved = self.enroll_create_user(
-                    course_id, context['modo'], lista_data, enroll, request.POST.get("document_type"))
-                login_url = request.build_absolute_uri('/login')
-                helpdesk_url = request.build_absolute_uri('/contact_form')
-                confirmation_url = request.build_absolute_uri(reverse('eol_sso_login:verification'))
-                course = get_course_by_id(CourseKey.from_string(course_id))
-                course_name =  course.display_name_with_default
-                email_saved = []
-                for d in lista_saved:
-                    if send_email:
-                        enroll_email.delay(d, course_name, login_url, helpdesk_url, confirmation_url)
-                    aux = d
-                    aux.pop('password', None)
-                    email_saved.append(aux)
-                context = {
-                    'datos': '',
-                    'auto_enroll': True,
-                    'send_email': True,
-                    'curso': '',
-                    'modo': 'honor',
-                    'document_type': 'rut',
-                    'action_send': send_email
-                }
-                if len(email_saved) > 0:
-                    context['lista_saved'] = email_saved
-                if len(lista_not_saved) > 0:
-                    context['lista_not_saved'] = lista_not_saved
-                return render(request, 'eol_sso_login/external.html', context)
+                if context['action'] == 'enroll':
+                    lista_saved, lista_not_saved, context_response = self.enroll_create_user(course_id, context['modo'], lista_data, enroll, request.POST.get("document_type"))
+                    # Emails
+                    login_url = request.build_absolute_uri('/login')
+                    helpdesk_url = request.build_absolute_uri('/contact_form')
+                    confirmation_url = request.build_absolute_uri(reverse('eol_sso_login:verification'))
+                    course = get_course_by_id(CourseKey.from_string(course_id))
+                    course_name =  course.display_name_with_default
+                    email_saved = []
+                    for d in lista_saved:
+                        if send_email:
+                            enroll_email.delay(d, course_name, login_url, helpdesk_url, confirmation_url)
+                        aux = d
+                        aux.pop('password', None)
+                        email_saved.append(aux)
+                    context = {
+                        'datos': '',
+                        'auto_enroll': True,
+                        'send_email': True,
+                        'curso': '',
+                        'modo': 'honor',
+                        'document_type': 'rut',
+                        'action_send': send_email
+                    }
+                    if len(email_saved) > 0:
+                        context['lista_saved'] = email_saved
+                    if len(lista_not_saved) > 0:
+                        context['lista_not_saved'] = lista_not_saved
+                elif context['action'] == 'unenroll':
+                    documents_list = [x[2] if len(x) > 1 else x[0] for x in lista_data]
+                    context_response = self.unenroll_user(course_id, documents_list, request.POST.get("document_type"))
+                
+                # Return response
+                if procedence == 'external':
+                    return render(request, 'eol_sso_login/external.html', context)
+                elif procedence == 'instructor':
+                    return JsonResponse(context_response)
             else:
                 logger.error("SSOEnroll - User dont have permission or is not staff, user: {}".format(request.user))
                 raise Http404()
@@ -826,6 +852,74 @@ class SSOEnroll(View, SSOUChile):
                     logger.error("SSOEnroll - User dont have permission, user: {}, course_id: {}".format(user.id, course_id))
         return context
     
+    def validate_document(self, user, lista_data, context):
+        wrong_data = []
+        duplicate_data = [[],[]]
+        original_data = [[],[]]
+        document_doesnt_exist = [[],[]]
+        # si no se ingreso datos
+        if not lista_data:
+            logger.error("SSOEnroll - Empty Data, user: {}".format(user.id))
+            context['no_data'] = ''
+        if len(lista_data) > 50:
+            logger.error("SSOEnroll - data limit is 50, length data: {} user: {}".format(len(lista_data),user.id))
+            context['limit_data'] = ''
+        else:
+            for i, data in enumerate(lista_data):
+                data = [d.strip() for d in data]
+                if len(data) != 1:
+                    logger.error("SSOEnroll - Error in data: {}".format(data))
+                    wrong_data.append(data)
+                else:
+                    if data[0] != "":                        
+                        if context['document_type'] == 'rut' and not validarRut(data[0]):
+                            logger.error("SSOEnroll - Wrong Document {}, data: {}".format(data[0], data))
+                            wrong_data.append(data)
+                        elif data[0] in original_data[0]:
+                            duplicate_data[0].append(data[0])
+                        else:
+                            if SSOLoginExtraData.objects.filter(document=data[0], type_document=context['document_type']).exists():
+                                ssologin_data = SSOLoginExtraData.objects.get(document=data[0], type_document=context['document_type'])
+                                if User.objects.filter(id=ssologin_data.user_id).exists():
+                                    user_found_by_document = User.objects.get(id=ssologin_data.user_id)
+                                    user_email = user_found_by_document.email
+                                    user_username = user_found_by_document.username
+                                    data = [user_username, user_email, data[0]]
+                                    lista_data[i] = data
+                            else:
+                                document_doesnt_exist[0].append(data[0])
+                            original_data[0].append(data[0])
+                    else:
+                        wrong_data.append(data)
+        if len(wrong_data) > 0:
+            context['wrong_data'] = wrong_data            
+        if len(duplicate_data[0]) > 0:
+            context['duplicate_rut'] = duplicate_data[0]
+        if len(document_doesnt_exist[0]) > 0:
+            context['doesnt_exists'] = document_doesnt_exist[0]
+        # si el modo es incorrecto
+        if not context['modo'] in ['honor', 'verified', 'audit']:
+            context['error_mode'] = ''
+        # si el document_type es incorrecto
+        if not context['document_type'] in ['rut', 'passport', 'dni']:
+            context['error_document_type'] = ''
+        # valida curso
+        if context['curso'] == "":
+            logger.error("SSOEnroll - Empty course, user: {}".format(user.id))
+            context['curso2'] = ''
+        # valida si existe el curso
+        else:
+            course_id = context['curso'].strip()
+            
+            if not self.validate_course(course_id):
+                context['error_curso'] = True
+                logger.error("SSOEnroll - Course dont exists, user: {}, course_id: {}".format(user.id, course_id))
+            if 'error_curso' not in context:
+                if not self.validate_user(user, course_id):
+                    context['error_permission'] = True
+                    logger.error("SSOEnroll - User dont have permission, user: {}, course_id: {}".format(user.id, course_id))
+        return context,lista_data
+
     def validate_course(self, course_id):
         """
             Verify if course.id exists
@@ -877,7 +971,16 @@ class SSOEnroll(View, SSOUChile):
     def enroll_create_user(self, course_id, mode, lista_data, enroll, document_type):
         lista_saved = []
         lista_not_saved = []
+        run_saved_force = ""
+        run_saved_force_no_auto = ""
+        run_saved_pending = ""
+        run_saved_enroll = ""
+        run_saved_enroll_no_auto = ""
+        run_saved_not_found = ""
         for dato in lista_data:
+            if len(dato) < 2:
+                run_saved_not_found += " - " + dato[0] + " / "        
+                continue
             if len(dato) == 2:
                 dato.append("")
             if document_type == 'rut':
@@ -907,6 +1010,7 @@ class SSOEnroll(View, SSOUChile):
                 self.enroll_course_user(user, course_id, enroll, mode)
                 have_sso = SSOLoginCuentaUChile.objects.filter(user=user).exists()
                 active_sso = SSOLoginCuentaUChile.objects.filter(user=user, is_active=True).exists()
+                run_saved_enroll += " - " + dato[0] + " / "   
                 activation_key = ''
                 if not active_sso:
                     try:
@@ -926,7 +1030,28 @@ class SSOEnroll(View, SSOUChile):
                     'fullname': user.profile.name.strip(),
                     'activation_key': activation_key
                 })
-        return lista_saved, lista_not_saved
+
+        run_saved = {
+            'run_saved_force': run_saved_force[:-3],
+            'run_saved_pending': run_saved_pending[:-3],
+            'run_saved_enroll': run_saved_enroll[:-3],
+            'run_saved_enroll_no_auto': run_saved_enroll_no_auto[:-3],
+            'run_saved_force_no_auto': run_saved_force_no_auto[:-3],
+            'run_saved_not_found': run_saved_not_found[:-3]
+        }
+
+        context_response = {
+                    'runs': '',
+                    'curso': course_id,
+                    'auto_enroll': True,
+                    'modo': mode,
+                    'saved': 'saved',
+                    'document_type':document_type,
+                    'run_saved': run_saved,
+                    'lista_saved':lista_saved,
+                    'lista_not_saved':lista_not_saved
+                    }
+        return lista_saved, lista_not_saved, context_response
 
     def enroll_course_user(self, user, course_id, enroll, mode):
         from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
@@ -940,6 +1065,49 @@ class SSOEnroll(View, SSOUChile):
                 course_id=CourseKey.from_string(course_id),
                 email=user.email,
                 user=user)
+    
+    def unenroll_user(self, course_id, lista_run, document_type):
+        """
+            Unenroll user
+        """
+        from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
+
+        course_keys = [CourseKey.from_string(course_id)]
+        lista_run_format = []
+        run_unenroll_pending = []
+        run_unenroll_allowed = []
+        run_unenroll_enroll = []
+        for run in lista_run:
+            while len(run) < 10 and 'P' != run[0] and 'CG' != run[0:2]:
+                run = "0" + run
+            lista_run_format.append(run)
+
+        with transaction.atomic():
+            ssologin_users = SSOLoginExtraData.objects.filter(document__in=lista_run, type_document__in=[document_type])
+            enrollmentAllowed = CourseEnrollmentAllowed.objects.filter(course_id__in=course_keys, user__ssologinextradata__in=ssologin_users)
+            if enrollmentAllowed:
+                run_unenroll_allowed = [x.user.ssologinextradata.document for x in enrollmentAllowed]
+                enrollmentAllowed.delete()
+            #unenroll CourseEnrollment
+            enrollment = CourseEnrollment.objects.filter(user__ssologinextradata__in=ssologin_users, course_id__in=course_keys)
+            if enrollment:
+                run_unenroll_enroll = [x.user.ssologinextradata.document for x in enrollment]
+                enrollment.update(is_active=0)
+        aux_run_unenroll = run_unenroll_pending
+        aux_run_unenroll.extend(run_unenroll_allowed)
+        aux_run_unenroll.extend(run_unenroll_enroll)
+        run_unenroll = []
+        for i in aux_run_unenroll:
+            if i not in run_unenroll:
+                run_unenroll.append(i)
+        run_unenroll_no_exists = [x for x in lista_run_format if x not in run_unenroll]
+        return {
+            'runs': '',
+            'auto_enroll': True,
+            'modo': 'honor',
+            'saved': 'unenroll',
+            'run_unenroll_no_exists': run_unenroll_no_exists,
+            'run_unenroll': run_unenroll}
 
     def get_or_create_user_with_run(self, dato, password, document_type):
         if User.objects.filter(email=dato[1]).exists():
