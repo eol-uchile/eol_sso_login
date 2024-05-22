@@ -10,9 +10,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='ssologinextradata',
-            name='type_document',
-            field=models.TextField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], help_text='Seleccione el tipo de documento', max_length=10, verbose_name='Tipo de documento'),
-        ),
+        # migrations.AlterField(
+        #     model_name='ssologinextradata',
+        #     name='type_document',
+        #     field=models.TextField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], help_text='Seleccione el tipo de documento', max_length=10, verbose_name='Tipo de documento'),
+        # ),
     ]

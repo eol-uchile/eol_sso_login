@@ -720,11 +720,14 @@ class SSOEnroll(View, SSOUChile):
                     
                 # validacion de datos
                 procedence = 'external'
-                if 'META' in request:
-                    if '/instructor' in request.META['HTTP_REFERER']:
-                        context, lista_data = self.validate_document(request.user, lista_data, context)
-                        procedence = 'instructor'
-                    else: 
+                if hasattr(request, 'META'):
+                    if hasattr(request.META, 'HTTP_REFERER'):
+                        if '/instructor' in request.META['HTTP_REFERER']:
+                            context, lista_data = self.validate_document(request.user, lista_data, context)
+                            procedence = 'instructor'
+                        else: 
+                            context = self.validate_data(request.user, lista_data, context)
+                    else:
                         context = self.validate_data(request.user, lista_data, context)
                 else:
                     context = self.validate_data(request.user, lista_data, context)
@@ -865,6 +868,7 @@ class SSOEnroll(View, SSOUChile):
             for i, data in enumerate(lista_data):
                 data = [d.strip() for d in data]
                 if len(data) != 1:
+                    logger.error("SSOEnroll - Error in data: {}".format(data))
                     wrong_data.append(data)
                 else:
                     if data[0] != "":                        
@@ -1038,11 +1042,14 @@ class SSOEnroll(View, SSOUChile):
 
         context_response = {
                     'runs': '',
-                    'curso': '',
+                    'curso': course_id,
                     'auto_enroll': True,
-                    'modo': 'audit',
+                    'modo': mode,
                     'saved': 'saved',
-                    'run_saved': run_saved
+                    'document_type':document_type,
+                    'run_saved': run_saved,
+                    'lista_saved':lista_saved,
+                    'lista_not_saved':lista_not_saved
                     }
         return lista_saved, lista_not_saved, context_response
 

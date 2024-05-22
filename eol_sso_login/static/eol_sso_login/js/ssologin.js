@@ -13,7 +13,7 @@ function limitTextarea(textarea, maxLines) {
     var csrf = document.getElementById("csrf");//value
     var role = document.getElementById("role-run"); //value
     var course_id = document.getElementById("course_id"); //value
-    var document_type = document.getElementById("course_id"); //value
+    var document_type = document.getElementById("document-type"); //value
     var auto = true; //auto-enroll
     
     if (!runs.value) {
@@ -126,8 +126,7 @@ function limitTextarea(textarea, maxLines) {
       if (data.run_saved['run_saved_enroll'] != "" || data.run_saved['run_saved_force'] != ""){
         var run_saved_enroll = data.run_saved['run_saved_enroll'].split("/")
         var run_saved_force = data.run_saved['run_saved_force'].split("/")
-  
-        aux_success = aux_success + "<b>Usuarios inscritos correctamente: </b></br>";
+        aux_success = aux_success + "<b>Usuarios inscritos correctamente en modo "+data['modo'] +" usando tipo de documento "+data['document_type ']+": </b></br>";
         run_saved_enroll.forEach(run => {
           aux_success = aux_success + run + "</br>";
         });
