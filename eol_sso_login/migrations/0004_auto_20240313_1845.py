@@ -15,9 +15,4 @@ class Migration(migrations.Migration):
             name='is_completed',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
-            model_name='ssologinextradata',
-            name='type_document',
-            field=models.CharField(choices=[('rut', 'Rut'), ('passport', 'Passport'), ('dni', 'DNI')], help_text='Select document type', max_length=10, verbose_name='Document type'),
-        ),
     ]
