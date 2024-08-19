@@ -16,17 +16,17 @@ def package_data(pkg, roots):
 
 setup(
     name="eol_sso_login",
-    version="0.0.1",
-    author="Luis Santana",
-    author_email="luis.santana@uchile.cl",
+    version="0.0.2",
+    author="Oficina EOL UChile",
+    author_email="eol-ing@uchile.cl",
     description="Authentication backend for EOL from UChile api and Enroll/Unenroll/Export users",
     long_description="Authentication backend for EOL from UChile api and Enroll/Unenroll/Export users",
-    url="https://eol.uchile.cl",
-    packages=['eol_sso_login',],
+    url="https://github.com/eol-uchile/eol_sso_login",
+    packages=['eol_sso_login'],
     package_data=package_data("eol_sso_login", ["static", "locale"]),
     install_requires=["unidecode>=1.1.1"],
     classifiers=[
-        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
