@@ -5,6 +5,7 @@ from openedx.core.djangoapps.plugins.constants import (
     ProjectType,
     SettingsType,
 )
+from . import settings
 
 
 class EolSSOLoginConfig(AppConfig):
