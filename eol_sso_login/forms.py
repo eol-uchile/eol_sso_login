@@ -2,7 +2,7 @@
 import logging
 from django import forms
 from .utils import validarRut
-from .models import SSOLoginExtraData
+from . import models
 from django.utils.translation import gettext_lazy as _
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ class ExtraInfoForm(forms.ModelForm):
     The fields on this form are derived from the EdxLoginUser model in models.py.
     """
     class Meta(object):
-        model = SSOLoginExtraData
+        model = models.SSOLoginExtraData
         fields = ('type_document', 'document',)
 
     def __init__(self, *args, **kwargs):
@@ -40,7 +40,7 @@ class ExtraInfoForm(forms.ModelForm):
             document = document.replace(".", "")
             while len(document) < 10:
                 document = "0" + document
-        if SSOLoginExtraData.objects.filter(document=document, type_document=type_document).exists():
+        if models.SSOLoginExtraData.objects.filter(document=document, type_document=type_document).exists():
             raise forms.ValidationError(_('Document already exists on platform'))
         return cleaned_data
 
