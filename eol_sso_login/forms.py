@@ -2,7 +2,7 @@
 import logging
 from django import forms
 from .utils import validarRut
-from .models import SSOLoginExtraData
+import .models
 from django.utils.translation import gettext_lazy as _
 logger = logging.getLogger(__name__)
 
