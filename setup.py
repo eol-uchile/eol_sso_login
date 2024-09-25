@@ -16,7 +16,7 @@ def package_data(pkg, roots):
 
 setup(
     name="eol_sso_login",
-    version="0.1.0",
+    version="0.1.1",
     author="Oficina EOL UChile",
     author_email="eol-ing@uchile.cl",
     description="Authentication backend for EOL from UChile api and Enroll/Unenroll/Export users",
