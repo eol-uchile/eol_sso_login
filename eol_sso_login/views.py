@@ -101,37 +101,37 @@ class SSOUChile(object):
                 "SSOUChile - Rut doesnt have account in PH API, status_code: {}, body: {}, rut: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
-                    rut))
+                    dato if is_rut else dato[2]))
             raise Exception(
                 "SSOUChile - Rut doesnt have account in PH API, status_code: {}, rut: {}".format(
-                    result.status_code, rut))
+                    result.status_code, dato if is_rut else dato[2]))
         if 'email' not in data["data"]["getRowsPersona"]["persona"][0]:
             logger.error(
                 "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, body: {}, rut: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
-                    rut))
+                    dato if is_rut else dato[2]))
             raise Exception(
                 "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, rut: {}".format(
-                    result.status_code, rut))
+                    result.status_code, dato if is_rut else dato[2]))
         elif len(data["data"]["getRowsPersona"]["persona"][0]['email']) == 0:
             logger.error(
                 "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, body: {}, rut: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
-                    rut))
+                    dato if is_rut else dato[2]))
             raise Exception(
                 "SSOUChile - Rut doesnt have emails in PH API, status_code: {}, rut: {}".format(
-                    result.status_code, rut))
+                    result.status_code, dato if is_rut else dato[2]))
         if data["data"]["getRowsPersona"]["persona"][0]['pasaporte'][0]['vigencia'] != '1':
             logger.error(
                 "SSOUChile - Disabled account in PH API, status_code: {}, body: {}, rut: {}".format(
                     data['data']['getRowsPersona']['status_code'],
                     result.text,
-                    rut))
+                    dato if is_rut else dato[2]))
             raise Exception(
                 "SSOUChile - Disabled account in PH API, status_code: {}, rut: {}".format(
-                    result.status_code, rut))
+                    result.status_code, dato if is_rut else dato[2]))
         getRowsPersona = data["data"]["getRowsPersona"]['persona'][0]
         user_data = {
             'rut': getRowsPersona['indiv_id'],
