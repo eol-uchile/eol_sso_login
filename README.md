@@ -1,4 +1,7 @@
 # EOL SSO Login
+
+![Coverage Status](/coverage-badge.svg)
+
 ![https://github.com/eol-uchile/eol_sso_login/actions](https://github.com/eol-uchile/eol_sso_login/workflows/Python%20application/badge.svg) 
 
 # Install App
